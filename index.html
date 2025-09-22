@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Will You Be My Girlfriend?</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+body {
+  margin: 0;
+  height: 100vh;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #ffb6c1, #dda0dd, #ffe4e1);
+  overflow: hidden;
+  text-align: center;
+  color: #fff;
+  perspective: 1000px;
+}
+
+#container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  min-height: 100vh;
+  width: 90%;
+  max-width: 500px;
+  margin: auto;
+  position: relative;
+  z-index: 2;
+  backdrop-filter: blur(5px);
+  background: rgba(0,0,0,0.15);
+  border-radius: 20px;
+  padding-top: 50px;
+  padding-bottom: 30px;
+}
+
+h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  text-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+  margin-bottom: 20px;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: slideFade 2s forwards;
+  animation-delay: 0.5s;
+  max-width: 90%;
+}
+
+@keyframes slideFade { to { opacity: 1; transform: translateY(0); } }
+
+h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 8px #000, 0 0 15px #ff69b4;
+  margin-bottom: 20px;
+  opacity: 0;
+  transform: translateY(-30px);
+  transition: all 0.6s ease;
+}
+
+.button-row {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin: 15px 0;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s ease;
+}
+
+button {
+  padding: 15px 30px;
+  border: none;
+  border-radius: 15px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #fff;
+  text-shadow: 1px 1px 2px #000;
+  position: relative;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+button:hover {
+  transform: translateY(-3px) rotateX(3deg);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+}
+
+.yes {
+  background: linear-gradient(135deg, #ff0000, #000000);
+}
+
+.no {
+  background: linear-gradient(135deg, #ff6b6b, #c0392b);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+.no:hover {
+  transform: translateY(-3px) rotateX(3deg);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+}
+
+#confirmation {
+  margin-top: 15px;
+  color: #fff;
+  text-shadow: 0 0 8px #fff, 0 0 15px #ff69b4, 0 0 25px #ffb6c1;
+  transition: transform 0.6s ease, opacity 1s ease;
+  text-transform: uppercase;
+  font-size: 2.2rem;
+  font-weight: bold;
+  opacity: 0;
+}
+
+.countdown {
+  animation: popScale 0.5s ease forwards;
+}
+
+@keyframes popScale {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.5); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+#yesGif {
+  width: 150px;
+  margin: 20px auto 0 auto;
+  display: none;
+}
+
+.floating {
+  position: absolute;
+  font-size: 20px;
+  animation: float 4s linear forwards;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes float {
+  0% {transform: translateY(-50px);}
+  100% {transform: translateY(100vh);}
+}
+
+#confirmationStep { display: none; flex-direction: column; align-items: center; }
+#confirmationStep h1 { font-size: 1.8rem; margin-bottom: 15px; }
+#confirmationStep .button-row { opacity: 1; transform: translateY(0); }
+
+@media(max-width: 400px){
+  h2 { font-size: 1.2rem; }
+  h1 { font-size: 1.6rem; }
+  button { font-size: 1rem; padding: 12px 25px; min-width: 100px; }
+  #confirmation { font-size: 1.8rem; }
+  #yesGif { width: 120px; }
+}
+</style>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDEtUyZdmwIvPMewuF9giOcEzXGzbPVNQA",
+  authDomain: "answers-8cc49.firebaseapp.com",
+  databaseURL: "https://answers-8cc49-default-rtdb.firebaseio.com",
+  projectId: "answers-8cc49",
+  storageBucket: "answers-8cc49.firebasestorage.app",
+  messagingSenderId: "193637729462",
+  appId: "1:193637729462:web:cbdab1fc6ccdc03b7c5217",
+  measurementId: "G-72VRSYE7BS"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+</script>
+</head>
+
+<body>
+<div id="container">
+  <h2 id="introText">Took me a while to get here, and it’s kinda nerve-racking that the girl I only dreamt would be mine can finally be mine.</h2>
+
+  <button id="pressBtn">Press Me 💌</button>
+
+  <div id="question" style="display:none;">
+    <h1 id="mainQuestion">WILL YOU BE MY GIRLFRIEND? 💕</h1>
+    <div class="button-row" id="choices">
+      <button class="yes">Yes 💖🕷️</button>
+      <button class="no" id="noBtn">No 💔</button>
+    </div>
+  </div>
+
+  <div id="confirmationStep">
+    <h1>ARE YOU SURE? 💭</h1>
+    <div class="button-row">
+      <button id="sureBtn">YES, I’M SURE ✅</button>
+      <button id="changeBtn">CHANGE MY MIND 🔄</button>
+    </div>
+  </div>
+
+  <p id="confirmation"></p>
+  <img id="yesGif" src="https://i.imgur.com/4TJEb32.gif" alt="Celebration GIF">
+</div>
+
+<script>
+const pressBtn = document.getElementById('pressBtn');
+const questionDiv = document.getElementById('question');
+const mainQuestion = document.getElementById('mainQuestion');
+const choices = document.getElementById('choices');
+const body = document.body;
+const introText = document.getElementById('introText');
+const confirmation = document.getElementById('confirmation');
+const yesGif = document.getElementById('yesGif');
+const noBtn = document.getElementById('noBtn');
+const confirmationStep = document.getElementById('confirmationStep');
+const sureBtn = document.getElementById('sureBtn');
+const changeBtn = document.getElementById('changeBtn');
+
+let tempAnswer = '';
+
+pressBtn.onclick = () => {
+  questionDiv.style.display = 'block';
+  pressBtn.style.display = 'none';
+  setTimeout(() => {
+    mainQuestion.style.opacity = '1';
+    mainQuestion.style.transform = 'translateY(0)';
+    choices.style.opacity = '1';
+    choices.style.transform = 'translateY(0)';
+  }, 100);
+};
+
+// Ask confirmation
+document.querySelector('.yes').onclick = () => askConfirmation('Yes');
+document.querySelector('.no').onclick = () => askConfirmation('No');
+
+function askConfirmation(answer){
+  tempAnswer = answer;
+  choices.style.display = 'none';
+  confirmationStep.style.display = 'flex';
+}
+
+sureBtn.onclick = () => {
+  confirmationStep.style.display = 'none';
+  saveAnswer(tempAnswer);
+}
+
+changeBtn.onclick = () => {
+  confirmationStep.style.display = 'none';
+  choices.style.display = 'flex';
+};
+
+function showFinalMessage(answer) {
+  confirmation.style.opacity = 1;
+  confirmation.style.transform = 'scale(0)';
+  setTimeout(() => {
+    confirmation.style.transform = 'scale(1.2)';
+    setTimeout(() => { confirmation.style.transform = 'scale(1)'; }, 600);
+  }, 200);
+
+  if(answer === 'Yes'){
+    confirmation.innerText = "YOU JUST MADE ME THE HAPPIEST SPIDERHEAD ALIVE! 🕷️❤️";
+    yesGif.style.display = 'block';
+
+    for(let i=0;i<50;i++){
+      const heart=document.createElement('div');
+      heart.className='floating'; heart.innerText='💖';
+      heart.style.left=Math.random()*window.innerWidth+'px';
+      heart.style.animationDuration=(2+Math.random()*3)+'s';
+      body.appendChild(heart);
+
+      const spider=document.createElement('div');
+      spider.className='floating'; spider.innerText='🕷️';
+      spider.style.left=Math.random()*window.innerWidth+'px';
+      spider.style.animationDuration=(2+Math.random()*3)+'s';
+      body.appendChild(spider);
+    }
+  } else {
+    confirmation.innerText = "I’M DISAPPOINTED… 💔";
+    yesGif.style.display = 'none';
+  }
+}
+
+function saveAnswer(answer){
+  localStorage.setItem('herAnswer', answer);
+  db.ref('answers').push({ answer: answer, timestamp: new Date().toISOString() });
+
+  introText.style.opacity = 0;
+  mainQuestion.style.opacity = 0;
+  choices.style.opacity = 0;
+  confirmationStep.style.display = 'none';
+
+  setTimeout(() => {
+    introText.style.display = 'none';
+    mainQuestion.style.display = 'none';
+    choices.style.display = 'none';
+
+    let countdown = 3;
+    confirmation.style.opacity = 1;
+    confirmation.style.fontSize = '5rem';
+    confirmation.innerText = countdown;
+    confirmation.classList.add('countdown');
+
+    let countdownInterval = setInterval(() => {
+      countdown--;
+      if(countdown > 0){
+        confirmation.innerText = countdown;
+        confirmation.classList.remove('countdown');
+        void confirmation.offsetWidth;
+        confirmation.classList.add('countdown');
+      } else {
+        clearInterval(countdownInterval);
+        confirmation.style.fontSize = '3rem';
+        showFinalMessage(answer);
+      }
+    }, 1000);
+  }, 500);
+}
+
+// Load saved answer
+window.onload = () => {
+  let saved = localStorage.getItem('herAnswer');
+  if(saved){
+    pressBtn.style.display = 'none';
+    questionDiv.style.display = 'block';
+    choices.style.display = 'none';
+    introText.style.display = 'none';
+    confirmation.style.opacity = 1;
+    showFinalMessage(saved);
+  }
+};
+</script>
+</body>
+</html>
