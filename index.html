@@ -1,332 +1,379 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Will You Be My Girlfriend?</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Will You Be Mine?</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet" />
 <style>
-body {
-  margin: 0;
-  height: 100vh;
-  font-family: 'Poppins', sans-serif;
-  background: linear-gradient(135deg, #ffb6c1, #dda0dd, #ffe4e1);
-  overflow: hidden;
-  text-align: center;
-  color: #fff;
-  perspective: 1000px;
-}
+  :root{
+    --pink-1:#ff99cc; --pink-2:#ff66b2; --pink-3:#ff3385;
+  }
+  /* Background + base */
+  body {
+    margin: 0;
+    height: 100vh;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, var(--pink-1), var(--pink-2), var(--pink-3));
+    background-size: 400% 400%;
+    animation: gradientShift 14s ease-in-out infinite;
+    overflow: hidden;
+    color: #fff;
+    text-align: center;
+  }
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
 
-#container {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  min-height: 100vh;
-  width: 90%;
-  max-width: 500px;
-  margin: auto;
-  position: relative;
-  z-index: 2;
-  backdrop-filter: blur(5px);
-  background: rgba(0,0,0,0.15);
-  border-radius: 20px;
-  padding-top: 50px;
-  padding-bottom: 30px;
-}
+  /* Container card */
+  #container {
+    position: relative;
+    z-index: 2;
+    width: min(92vw, 720px);
+    margin: 0 auto;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+  }
+  .card {
+    width: 100%;
+    backdrop-filter: blur(6px);
+    background: rgba(0,0,0,0.28);
+    border-radius: 20px;
+    padding: clamp(16px, 4vw, 28px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  }
 
-h2 {
-  font-size: 1.4rem;
-  font-weight: 600;
-  text-shadow: 2px 2px 8px rgba(0,0,0,0.4);
-  margin-bottom: 20px;
-  opacity: 0;
-  transform: translateY(20px);
-  animation: slideFade 2s forwards;
-  animation-delay: 0.5s;
-  max-width: 90%;
-}
+  /* Intro and question */
+  h2 {
+    font-size: clamp(1rem, 4vw, 1.4rem);
+    font-weight: 600;
+    text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+    margin: 0 0 16px;
+    opacity: 0; transform: translateY(10px);
+    animation: fadeUp 0.8s 0.4s forwards;
+  }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
 
-@keyframes slideFade { to { opacity: 1; transform: translateY(0); } }
+  h1 {
+    font-size: clamp(1.6rem, 6vw, 2.6rem);
+    font-weight: 800;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 10px #000, 0 0 18px #ff69b4;
+    margin: 10px 0 16px;
+    opacity: 0; transform: translateY(-12px);
+    transition: all 0.6s ease;
+  }
 
-h1 {
-  font-size: 2rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  text-shadow: 2px 2px 8px #000, 0 0 15px #ff69b4;
-  margin-bottom: 20px;
-  opacity: 0;
-  transform: translateY(-30px);
-  transition: all 0.6s ease;
-}
+  .button-row {
+    display: flex;
+    gap: clamp(12px, 3vw, 22px);
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 10px 0 0;
+    opacity: 0; transform: translateY(12px);
+    transition: all 0.6s ease;
+  }
 
-.button-row {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  flex-wrap: wrap;
-  margin: 15px 0;
-  opacity: 0;
-  transform: translateY(30px);
-  transition: all 0.6s ease;
-}
+  /* Buttons */
+  button {
+    padding: clamp(10px, 3vw, 18px) clamp(20px, 6vw, 44px);
+    border: none; border-radius: 16px;
+    font-size: clamp(1rem, 4vw, 1.2rem);
+    font-weight: 700; color: #fff;
+    text-shadow: 1px 1px 3px #000;
+    cursor: pointer;
+    transition: transform .25s ease, box-shadow .25s ease, background .3s ease;
+    position: relative; overflow: hidden;
+  }
+  button:hover { transform: translateY(-3px) scale(1.03); }
 
-button {
-  padding: 15px 30px;
-  border: none;
-  border-radius: 15px;
-  font-size: 1.2rem;
-  font-weight: 600;
-  cursor: pointer;
-  color: #fff;
-  text-shadow: 1px 1px 2px #000;
-  position: relative;
-  transition: all 0.3s ease;
-  min-width: 120px;
-}
+  .yes {
+    background: linear-gradient(135deg, #ff0000, #000000);
+    animation: yesGlow 2.2s ease-in-out infinite alternate;
+    box-shadow: 0 0 14px rgba(255,26,117,.55);
+  }
+  @keyframes yesGlow {
+    from { box-shadow: 0 0 10px #ff4da6, 0 0 20px #ff3385; }
+    to   { box-shadow: 0 0 22px #ff66cc, 0 0 44px #ff3399; }
+  }
+  .yes::before, .yes::after{
+    content:"✨";
+    position:absolute; opacity:.85;
+    filter: drop-shadow(0 0 6px rgba(255,255,255,.5));
+  }
+  .yes::before{ top:-8px; left:14%; font-size:1.1rem; animation: sparkle 2s infinite; }
+  .yes::after { bottom:-10px; right:12%; font-size:1.4rem; animation: sparkle 3s infinite alternate; }
+  @keyframes sparkle {
+    0%{ transform: scale(.85) rotate(0deg); opacity:.5; }
+    50%{ transform: scale(1.2) rotate(18deg); opacity:1; }
+    100%{ transform: scale(.85) rotate(0deg); opacity:.5; }
+  }
 
-button:hover {
-  transform: translateY(-3px) rotateX(3deg);
-  box-shadow: 0 6px 15px rgba(0,0,0,0.5);
-}
+  .no {
+    background: linear-gradient(135deg, #ff6b6b, #c0392b);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+  }
+  .no:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.45); }
 
-.yes {
-  background: linear-gradient(135deg, #ff0000, #000000);
-}
+  /* Confirmation text + GIF */
+  #confirmation {
+    margin-top: 14px;
+    color: #fff;
+    text-shadow: 0 0 8px #fff, 0 0 16px #ff2e72, 0 0 24px #ff9ac7;
+    transition: transform .6s ease, opacity 1s ease;
+    text-transform: uppercase;
+    font-size: clamp(1.4rem, 6vw, 2.4rem);
+    font-weight: 800; opacity: 0;
+  }
+  #yesGif {
+    width: clamp(120px, 38vw, 200px);
+    display: none; margin: 16px auto 0;
+  }
 
-.no {
-  background: linear-gradient(135deg, #ff6b6b, #c0392b);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-}
+  /* Floating emojis (background) */
+  .floating {
+    position: fixed;
+    left: 0; top: -40px;
+    font-size: clamp(16px, 5vw, 26px);
+    animation: floatDown 6.5s linear;
+    pointer-events: none; z-index: 1;
+  }
+  @keyframes floatDown {
+    0% { transform: translateY(-60px); opacity: .98; }
+    100% { transform: translateY(110vh); opacity: 0; }
+  }
 
-.no:hover {
-  transform: translateY(-3px) rotateX(3deg);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-}
+  /* Confirmation modal */
+  .modal-backdrop{
+    position: fixed; inset: 0; z-index: 20;
+    background: rgba(0,0,0,.35); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center;
+    animation: fadeIn .3s ease;
+  }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 
-#confirmation {
-  margin-top: 15px;
-  color: #fff;
-  text-shadow: 0 0 8px #fff, 0 0 15px #ff69b4, 0 0 25px #ffb6c1;
-  transition: transform 0.6s ease, opacity 1s ease;
-  text-transform: uppercase;
-  font-size: 2.2rem;
-  font-weight: bold;
-  opacity: 0;
-}
+  .modal{
+    width: min(92vw, 560px);
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 18px;
+    padding: clamp(16px, 4vw, 28px);
+    box-shadow: 0 20px 50px rgba(0,0,0,.35);
+    transform: scale(.9); opacity: 0;
+    animation: popIn .35s .05s ease forwards;
+    text-align: center;
+  }
+  @keyframes popIn { to{ transform: scale(1); opacity: 1; } }
 
-.countdown {
-  animation: popScale 0.5s ease forwards;
-}
+  .modal h3{
+    margin: 0 0 14px;
+    font-size: clamp(1.2rem, 5vw, 1.8rem);
+    font-weight: 800;
+    text-transform: uppercase;
+    text-shadow: 0 0 14px #ffb6dc, 0 0 28px #ff5aa0;
+  }
+  .modal .row{
+    display:flex; gap: clamp(10px,3vw,18px); justify-content:center; flex-wrap:wrap;
+    margin-top: 8px;
+  }
+  .modal .yes, .modal .no{ font-size: clamp(0.95rem, 4vw, 1.1rem); }
 
-@keyframes popScale {
-  0% { transform: scale(0); opacity: 0; }
-  50% { transform: scale(1.5); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-#yesGif {
-  width: 150px;
-  margin: 20px auto 0 auto;
-  display: none;
-}
-
-.floating {
-  position: absolute;
-  font-size: 20px;
-  animation: float 4s linear forwards;
-  pointer-events: none;
-  z-index: 1;
-}
-
-@keyframes float {
-  0% {transform: translateY(-50px);}
-  100% {transform: translateY(100vh);}
-}
-
-#confirmationStep { display: none; flex-direction: column; align-items: center; }
-#confirmationStep h1 { font-size: 1.8rem; margin-bottom: 15px; }
-#confirmationStep .button-row { opacity: 1; transform: translateY(0); }
-
-@media(max-width: 400px){
-  h2 { font-size: 1.2rem; }
-  h1 { font-size: 1.6rem; }
-  button { font-size: 1rem; padding: 12px 25px; min-width: 100px; }
-  #confirmation { font-size: 1.8rem; }
-  #yesGif { width: 120px; }
-}
+  /* Countdown pop effect */
+  .countPop { animation: countPop .45s ease forwards; }
+  @keyframes countPop {
+    0%{ transform: scale(0); opacity:0; }
+    60%{ transform: scale(1.3); opacity:1; }
+    100%{ transform: scale(1); opacity:1; }
+  }
 </style>
+</head>
+<body>
 
+<!-- floating emojis (💖 🌹 💕 ✨ 🦋 🎀) -->
+<script>
+  (function startFloating(){
+    const emojis = ["💖","🌹","💕","✨","🦋","🎀"];
+    function dropEmoji(){
+      const e = document.createElement('div');
+      e.className = 'floating';
+      e.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+      e.style.left = Math.random()*100 + 'vw';
+      e.style.animationDuration = (4 + Math.random()*4) + 's';
+      e.style.fontSize = (18 + Math.random()*20) + 'px';
+      e.style.opacity = 0.9 - Math.random()*0.3;
+      document.body.appendChild(e);
+      setTimeout(()=> e.remove(), 9000);
+    }
+    // faster spawn = more emojis 🎉
+    setInterval(dropEmoji, 350);
+  })();
+</script>
+
+<div id="container">
+  <div class="card" id="card">
+    <!-- Intro -->
+    <h2 id="introText">Took me a while to get here, and it’s kinda nerve-racking that the girl I only dreamt would be mine can finally be mine.</h2>
+
+    <!-- Press -->
+    <button id="pressBtn" class="yes" style="margin-top:6px;">Press Me 💌</button>
+
+    <!-- Question -->
+    <div id="question" style="display:none;">
+      <h1 id="mainQuestion">WILL YOU BE MINE? 💕</h1>
+      <div class="button-row" id="choices">
+        <button class="yes" id="yesBtn">Yes 💖</button>
+        <button class="no" id="noBtn">No 💔</button>
+      </div>
+      <p id="confirmation"></p>
+      <img id="yesGif" src="https://i.imgur.com/4TJEb32.gif" alt="Celebration GIF">
+    </div>
+  </div>
+</div>
+
+<!-- ARE YOU SURE modal -->
+<div class="modal-backdrop" id="sureBackdrop" aria-hidden="true">
+  <div class="modal">
+    <h3>ARE YOU SURE? 💞</h3>
+    <div class="row">
+      <button class="yes" id="sureYes">YES, I’M SURE</button>
+      <button class="no" id="sureNo">LET ME THINK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDEtUyZdmwIvPMewuF9giOcEzXGzbPVNQA",
-  authDomain: "answers-8cc49.firebaseapp.com",
-  databaseURL: "https://answers-8cc49-default-rtdb.firebaseio.com",
-  projectId: "answers-8cc49",
-  storageBucket: "answers-8cc49.firebasestorage.app",
-  messagingSenderId: "193637729462",
-  appId: "1:193637729462:web:cbdab1fc6ccdc03b7c5217",
-  measurementId: "G-72VRSYE7BS"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+  const firebaseConfig = {
+    apiKey: "AIzaSyDEtUyZdmwIvPMewuF9giOcEzXGzbPVNQA",
+    authDomain: "answers-8cc49.firebaseapp.com",
+    databaseURL: "https://answers-8cc49-default-rtdb.firebaseio.com",
+    projectId: "answers-8cc49",
+    storageBucket: "answers-8cc49.firebasestorage.app",
+    messagingSenderId: "193637729462",
+    appId: "1:193637729462:web:cbdab1fc6ccdc03b7c5217",
+    measurementId: "G-72VRSYE7BS"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 </script>
-</head>
-
-<body>
-<div id="container">
-  <h2 id="introText">Took me a while to get here, and it’s kinda nerve-racking that the girl I only dreamt would be mine can finally be mine.</h2>
-
-  <button id="pressBtn">Press Me 💌</button>
-
-  <div id="question" style="display:none;">
-    <h1 id="mainQuestion">WILL YOU BE MY GIRLFRIEND? 💕</h1>
-    <div class="button-row" id="choices">
-      <button class="yes">Yes 💖🕷️</button>
-      <button class="no" id="noBtn">No 💔</button>
-    </div>
-  </div>
-
-  <div id="confirmationStep">
-    <h1>ARE YOU SURE? 💭</h1>
-    <div class="button-row">
-      <button id="sureBtn">YES, I’M SURE ✅</button>
-      <button id="changeBtn">CHANGE MY MIND 🔄</button>
-    </div>
-  </div>
-
-  <p id="confirmation"></p>
-  <img id="yesGif" src="https://i.imgur.com/4TJEb32.gif" alt="Celebration GIF">
-</div>
 
 <script>
-const pressBtn = document.getElementById('pressBtn');
-const questionDiv = document.getElementById('question');
-const mainQuestion = document.getElementById('mainQuestion');
-const choices = document.getElementById('choices');
-const body = document.body;
-const introText = document.getElementById('introText');
-const confirmation = document.getElementById('confirmation');
-const yesGif = document.getElementById('yesGif');
-const noBtn = document.getElementById('noBtn');
-const confirmationStep = document.getElementById('confirmationStep');
-const sureBtn = document.getElementById('sureBtn');
-const changeBtn = document.getElementById('changeBtn');
+  const pressBtn = document.getElementById('pressBtn');
+  const questionDiv = document.getElementById('question');
+  const mainQuestion = document.getElementById('mainQuestion');
+  const choices = document.getElementById('choices');
+  const introText = document.getElementById('introText');
+  const confirmation = document.getElementById('confirmation');
+  const yesGif = document.getElementById('yesGif');
 
-let tempAnswer = '';
+  const sureBackdrop = document.getElementById('sureBackdrop');
+  const sureYes = document.getElementById('sureYes');
+  const sureNo  = document.getElementById('sureNo');
 
-pressBtn.onclick = () => {
-  questionDiv.style.display = 'block';
-  pressBtn.style.display = 'none';
-  setTimeout(() => {
-    mainQuestion.style.opacity = '1';
-    mainQuestion.style.transform = 'translateY(0)';
-    choices.style.opacity = '1';
-    choices.style.transform = 'translateY(0)';
-  }, 100);
-};
+  let pendingAnswer = null;
 
-// Ask confirmation
-document.querySelector('.yes').onclick = () => askConfirmation('Yes');
-document.querySelector('.no').onclick = () => askConfirmation('No');
-
-function askConfirmation(answer){
-  tempAnswer = answer;
-  choices.style.display = 'none';
-  confirmationStep.style.display = 'flex';
-}
-
-sureBtn.onclick = () => {
-  confirmationStep.style.display = 'none';
-  saveAnswer(tempAnswer);
-}
-
-changeBtn.onclick = () => {
-  confirmationStep.style.display = 'none';
-  choices.style.display = 'flex';
-};
-
-function showFinalMessage(answer) {
-  confirmation.style.opacity = 1;
-  confirmation.style.transform = 'scale(0)';
-  setTimeout(() => {
-    confirmation.style.transform = 'scale(1.2)';
-    setTimeout(() => { confirmation.style.transform = 'scale(1)'; }, 600);
-  }, 200);
-
-  if(answer === 'Yes'){
-    confirmation.innerText = "YOU JUST MADE ME THE HAPPIEST SPIDERHEAD ALIVE! 🕷️❤️";
-    yesGif.style.display = 'block';
-
-    for(let i=0;i<50;i++){
-      const heart=document.createElement('div');
-      heart.className='floating'; heart.innerText='💖';
-      heart.style.left=Math.random()*window.innerWidth+'px';
-      heart.style.animationDuration=(2+Math.random()*3)+'s';
-      body.appendChild(heart);
-
-      const spider=document.createElement('div');
-      spider.className='floating'; spider.innerText='🕷️';
-      spider.style.left=Math.random()*window.innerWidth+'px';
-      spider.style.animationDuration=(2+Math.random()*3)+'s';
-      body.appendChild(spider);
-    }
-  } else {
-    confirmation.innerText = "I’M DISAPPOINTED… 💔";
-    yesGif.style.display = 'none';
-  }
-}
-
-function saveAnswer(answer){
-  localStorage.setItem('herAnswer', answer);
-  db.ref('answers').push({ answer: answer, timestamp: new Date().toISOString() });
-
-  introText.style.opacity = 0;
-  mainQuestion.style.opacity = 0;
-  choices.style.opacity = 0;
-  confirmationStep.style.display = 'none';
-
-  setTimeout(() => {
-    introText.style.display = 'none';
-    mainQuestion.style.display = 'none';
-    choices.style.display = 'none';
-
-    let countdown = 3;
-    confirmation.style.opacity = 1;
-    confirmation.style.fontSize = '5rem';
-    confirmation.innerText = countdown;
-    confirmation.classList.add('countdown');
-
-    let countdownInterval = setInterval(() => {
-      countdown--;
-      if(countdown > 0){
-        confirmation.innerText = countdown;
-        confirmation.classList.remove('countdown');
-        void confirmation.offsetWidth;
-        confirmation.classList.add('countdown');
-      } else {
-        clearInterval(countdownInterval);
-        confirmation.style.fontSize = '3rem';
-        showFinalMessage(answer);
-      }
-    }, 1000);
-  }, 500);
-}
-
-// Load saved answer
-window.onload = () => {
-  let saved = localStorage.getItem('herAnswer');
-  if(saved){
-    pressBtn.style.display = 'none';
+  pressBtn.onclick = () => {
     questionDiv.style.display = 'block';
-    choices.style.display = 'none';
-    introText.style.display = 'none';
-    confirmation.style.opacity = 1;
-    showFinalMessage(saved);
+    pressBtn.style.display = 'none';
+    setTimeout(() => {
+      mainQuestion.style.opacity = '1';
+      mainQuestion.style.transform = 'translateY(0)';
+      choices.style.opacity = '1';
+      choices.style.transform = 'translateY(0)';
+    }, 80);
+  };
+
+  // Open confirmation modal
+  document.getElementById('yesBtn').onclick = () => openSure('Yes');
+  document.getElementById('noBtn').onclick  = () => openSure('No');
+
+  function openSure(ans){
+    pendingAnswer = ans;
+    sureBackdrop.style.display = 'flex';
+    sureBackdrop.setAttribute('aria-hidden', 'false');
   }
-};
+
+  // Modal actions
+  sureYes.onclick = () => {
+    sureBackdrop.style.display = 'none';
+    sureBackdrop.setAttribute('aria-hidden', 'true');
+    saveAnswer(pendingAnswer);
+  };
+  sureNo.onclick = () => {
+    sureBackdrop.style.display = 'none';
+    sureBackdrop.setAttribute('aria-hidden', 'true');
+    pendingAnswer = null;
+  };
+
+  function showFinalMessage(answer) {
+    confirmation.style.opacity = 1;
+    confirmation.style.transform = 'scale(0)';
+    setTimeout(() => {
+      confirmation.style.transform = 'scale(1.15)';
+      setTimeout(() => { confirmation.style.transform = 'scale(1)'; }, 500);
+    }, 150);
+
+    if (answer === 'Yes') {
+      confirmation.textContent = "YOU JUST MADE ME THE HAPPIEST SPIDERHEAD ALIVE! ❤️";
+      yesGif.style.display = 'block';
+    } else {
+      confirmation.textContent = "I’M DISAPPOINTED… 💔";
+      yesGif.style.display = 'none';
+    }
+  }
+
+  function saveAnswer(answer){
+    localStorage.setItem('herAnswer', answer);
+    db.ref('answers').push({ answer, timestamp: new Date().toISOString() });
+
+    introText.style.opacity = 0;
+    mainQuestion.style.opacity = 0;
+    choices.style.opacity = 0;
+
+    setTimeout(() => {
+      introText.style.display = 'none';
+      mainQuestion.style.display = 'none';
+      choices.style.display = 'none';
+
+      let n = 3;
+      confirmation.style.opacity = 1;
+      confirmation.style.fontSize = 'clamp(1.8rem, 8vw, 3.2rem)';
+      confirmation.textContent = n;
+      confirmation.classList.add('countPop');
+
+      const iv = setInterval(() => {
+        n--;
+        if (n > 0) {
+          confirmation.textContent = n;
+          confirmation.classList.remove('countPop');
+          void confirmation.offsetWidth; 
+          confirmation.classList.add('countPop');
+        } else {
+          clearInterval(iv);
+          confirmation.style.fontSize = 'clamp(1.4rem, 6vw, 2.4rem)';
+          showFinalMessage(answer);
+        }
+      }, 1000);
+    }, 420);
+  }
+
+  window.onload = () => {
+    const saved = localStorage.getItem('herAnswer');
+    if (saved) {
+      pressBtn.style.display = 'none';
+      questionDiv.style.display = 'block';
+      document.getElementById('choices').style.display = 'none';
+      introText.style.display = 'none';
+      confirmation.style.opacity = 1;
+      showFinalMessage(saved);
+    }
+  };
 </script>
 </body>
 </html>
