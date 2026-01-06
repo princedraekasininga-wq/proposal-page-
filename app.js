@@ -126,7 +126,7 @@ let currentLoanId = null;
 // ==========================================
 // 3. AUTHENTICATION & CLOUD SYNC
 // ==========================================
-const TEST_MODE = fasle;
+const TEST_MODE = true;
 
 function showWelcomeScreen() {
   const screen = el("welcomeScreen");
