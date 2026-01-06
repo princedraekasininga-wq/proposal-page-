@@ -1,0 +1,952 @@
+/* =========================================
+   STALLZ LOANS - CYBER BLUE (FINAL)
+   ========================================= */
+
+/* 1. TYPOGRAPHY & VARIABLES */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Deep Space Theme */
+  --bg-color: #020617;
+  --bg-gradient: radial-gradient(circle at 50% -20%, #0f172a 0%, #020617 80%);
+
+  /* Glass Cards */
+  --card-bg: rgba(15, 23, 42, 0.75);
+  --card-border: 1px solid rgba(255, 255, 255, 0.08);
+  --glass-blur: blur(20px);
+  --card-glow: 0 0 40px rgba(59, 130, 246, 0.05);
+
+  /* Inputs */
+  --input-bg: rgba(0, 0, 0, 0.5);
+  --input-border: rgba(255, 255, 255, 0.15);
+
+  /* NEON BLUE COLORS */
+  --primary: #3b82f6;       /* Royal Blue */
+  --primary-dark: #1d4ed8;
+  --primary-glow: 0 0 20px rgba(59, 130, 246, 0.4);
+
+  --text-main: #ffffff;
+  --text-muted: #94a3b8;    /* Slate Grey */
+
+  --radius: 16px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-color);
+  background-image: var(--bg-gradient);
+  background-attachment: fixed;
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+.app-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+  width: 100%;
+}
+
+/* =========================================
+   2. HEADER (Style: Holographic HUD - Mobile Optimized)
+   ========================================= */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+
+  /* Glass HUD Look */
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 -2px 0 rgba(59, 130, 246, 0.2);
+
+  /* Mobile Safety: Allow wrapping */
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* Brand Styling */
+.header-brand h1 {
+  font-size: 1.5rem; margin: 0; display: flex; align-items: center; gap: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.header-brand span {
+  background: var(--primary); color: white; padding: 6px 10px; border-radius: 8px;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+  transform: perspective(500px) rotateY(10deg); /* 3D effect */
+  transition: 0.5s;
+  font-size: 0.9rem;
+}
+.header-brand:hover span { transform: perspective(500px) rotateY(-180deg); }
+
+/* HUD Badges Container */
+.hud-rates {
+  display: flex;
+  gap: 8px;
+  /* Mobile: Scroll horizontally if screen is too narrow */
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+.hud-rates::-webkit-scrollbar { display: none; }
+
+/* The Glass Chips */
+.hud-badge {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: white;
+  display: flex; flex-direction: column; align-items: center; line-height: 1;
+  transition: 0.3s;
+  flex-shrink: 0; /* Prevents squishing on phones */
+}
+.hud-badge span {
+  font-size: 0.65rem; color: var(--text-muted); margin-top: 4px; font-weight: 400; text-transform: uppercase;
+}
+
+/* Hover & Active Glow */
+.hud-badge:hover, .hud-badge.active {
+  border-color: var(--primary);
+  background: rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+  transform: translateY(-2px);
+}
+
+/* =========================================
+   MOBILE CARD VIEW (Fixed: Value Left, Label Right, No Scroll)
+   ========================================= */
+@media (max-width: 768px) {
+  thead { display: none; }
+
+  tbody tr {
+    display: flex; flex-direction: column;
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    margin-bottom: 16px;
+    padding: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  }
+
+  tbody td {
+    display: flex;
+    /* SWAP SIDES: Value comes first (Left), Label comes last (Right) */
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    align-items: center;
+
+    border: none !important;
+    padding: 10px 0 !important;
+    border-bottom: 1px solid rgba(255,255,255,0.03) !important;
+
+    /* FIT SCREEN: Forces text to wrap so no scrolling needed */
+    white-space: normal !important;
+    word-break: break-word;
+    text-align: left;
+  }
+
+  tbody td:last-child {
+    border-bottom: none !important;
+    margin-top: 8px;
+    /* Actions Row: Keep buttons normal */
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  /* LABEL STYLING (Now appears on the Right) */
+  tbody td::before {
+    content: attr(data-label);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    text-align: right;
+    min-width: 80px;
+    margin-left: 12px;
+    opacity: 0.7;
+    flex-shrink: 0; /* Prevents label from getting squashed */
+  }
+}
+
+/* =========================================
+   3. NAVIGATION (FLOATING PILL DOCK)
+   ========================================= */
+
+/* DESKTOP: Clean tabs under header */
+.top-nav {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 24px;
+  padding-bottom: 0;
+  background: transparent;
+}
+
+.nav-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 10px 4px;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  display: flex; align-items: center; gap: 8px;
+}
+.nav-btn .icon { font-size: 1.1rem; }
+.nav-btn:hover { color: white; }
+.nav-btn-active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+
+/* =========================================
+   MOBILE: The Floating "Magic Pill" Dock
+   ========================================= */
+@media (max-width: 768px) {
+
+  /* 1. Space at bottom so content isn't hidden behind the pill */
+  body { padding-bottom: 100px; }
+
+  .top-nav {
+    /* POSITIONING: Floats above the bottom */
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%); /* Centers it perfectly */
+    z-index: 1000;
+
+    /* SIZE & SHAPE: The "Pill" */
+    width: 90%;
+    max-width: 400px; /* Prevents it from getting too wide */
+    height: 70px;
+    border-radius: 50px; /* Super rounded corners */
+
+    /* GLASS EFFECT */
+    background: rgba(15, 23, 42, 0.85); /* Dark blue-black */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+
+    /* DEPTH: Makes it look like it's floating */
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6),
+                0 5px 15px rgba(0, 0, 0, 0.3);
+
+    /* LAYOUT */
+    margin: 0;
+    padding: 0 10px;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: none;
+  }
+
+  /* BUTTON STYLING */
+  .nav-btn {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+
+    font-size: 0.65rem;
+    color: #94a3b8;
+    border-bottom: none;
+    padding: 0;
+    height: 100%;
+    flex: 1;
+    border-radius: 0;
+  }
+
+  /* ICONS */
+  .nav-btn .icon {
+    font-size: 1.5rem;
+    margin-bottom: 2px;
+    transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy effect */
+    background: rgba(255,255,255,0.05);
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+  }
+
+  /* ACTIVE STATE: The "Pop" Effect */
+  .nav-btn-active {
+    color: white;
+  }
+
+  .nav-btn-active .icon {
+    background: var(--primary); /* Blue circle */
+    color: white;
+    transform: translateY(-15px) scale(1.1); /* Floats UP out of the pill */
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.5);
+    border: 4px solid #020617; /* Dark border matches bg to create "cutout" look */
+  }
+}
+
+/* =========================================
+   MOBILE: Fixed Bottom Bar (App Style)
+   ========================================= */
+@media (max-width: 768px) {
+
+  /* 1. Push body content up so it doesn't hide behind the bar */
+  body { padding-bottom: 90px; }
+
+  /* 2. Fix the bar to the bottom */
+  .top-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 1000;
+
+    background: rgba(15, 23, 42, 0.95); /* Dark Glass */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255,255,255,0.15);
+    border-bottom: none;
+
+    margin: 0;
+    padding: 8px 0 24px 0; /* Extra padding for iPhone Swipe Bar */
+
+    justify-content: space-around; /* Spread buttons evenly */
+    gap: 0;
+  }
+
+  /* 3. Stack Icon on top of Text */
+  .nav-btn {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+
+    font-size: 0.7rem; /* Smaller text */
+    color: #64748b;
+    border-bottom: none; /* No line on mobile */
+    padding: 8px;
+    flex: 1; /* Make touch targets wide */
+  }
+
+  /* 4. Make icons bigger and touch-friendly */
+  .nav-btn .icon {
+    font-size: 1.4rem;
+    display: block;
+    margin-bottom: 2px;
+    transition: 0.2s;
+  }
+
+  /* 5. Mobile Active State (Glows blue) */
+  .nav-btn-active {
+    color: #60a5fa; /* Light Blue */
+    background: transparent;
+    text-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+  }
+
+  .nav-btn-active .icon {
+    transform: translateY(-3px);
+    filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
+  }
+}
+/* =========================================
+   4. LAYOUT & CARDS
+   ========================================= */
+.layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 24px;
+}
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; gap: 16px; } }
+
+.view-hidden { display: none; }
+
+.card {
+  background: var(--card-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--card-border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--card-glow);
+  position: relative;
+  overflow: hidden;
+}
+@media (max-width: 600px) { .card { padding: 16px; } }
+
+.card h2 {
+  font-size: 1.1rem; margin: 0 0 20px 0;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding-bottom: 16px;
+  position: relative;
+  z-index: 2;
+}
+
+.section-title {
+  margin-top: 24px; margin-bottom: 12px;
+  font-size: 0.75rem; font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+}
+
+/* =========================================
+   5. INPUTS & FILTERS (Fixed Beauty)
+   ========================================= */
+.filters-row {
+  display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 20px;
+}
+.filters-row .field { margin-bottom: 0; flex: 1; min-width: 120px; }
+
+input, select, textarea {
+  width: 100%;
+  background: var(--input-bg) !important;
+  border: 1px solid var(--input-border) !important;
+  color: white !important;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: 0.2s;
+  -webkit-appearance: none;
+}
+
+/* Add custom arrow back to Select boxes */
+select {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1em;
+  padding-right: 2.5rem;
+}
+
+input:focus, select:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  background: rgba(0,0,0,0.6) !important;
+}
+
+.field label {
+  display: block; font-size: 0.85rem; color: var(--text-muted);
+  margin-bottom: 8px; font-weight: 500;
+}
+
+/* =========================================
+   6. TABLES
+   ========================================= */
+.table-wrapper {
+  overflow-x: auto; margin-top: 16px;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: rgba(0,0,0,0.2);
+  -webkit-overflow-scrolling: touch;
+}
+
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+
+th {
+  text-align: left; padding: 14px 16px;
+  color: var(--text-muted); font-weight: 600;
+  background: rgba(255,255,255,0.02);
+  white-space: nowrap;
+}
+
+td {
+  padding: 14px 16px; border-top: 1px solid rgba(255,255,255,0.05);
+  color: var(--text-main); white-space: nowrap;
+}
+@media (max-width: 600px) { th, td { padding: 12px 10px; font-size: 0.85rem; } }
+
+tbody tr { transition: all 0.2s; border-left: 3px solid transparent; }
+tbody tr:hover {
+  background: rgba(255,255,255,0.03);
+  border-left-color: var(--primary);
+}
+
+.status-pill { padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;}
+.dot { width: 6px; height: 6px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
+
+.status-active { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+.status-overdue { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); animation: pulseRed 2s infinite; }
+.status-paid { background: rgba(255, 255, 255, 0.1); color: #cbd5e1; }
+
+@keyframes pulseRed { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+/* =========================================
+   7. MODALS (Glass & Animated Wizard)
+   ========================================= */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+.modal-hidden { display: none; }
+
+.modal {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.15);
+  width: 100%; max-width: 420px;
+  border-radius: 24px;
+  padding: 24px;
+  position: relative;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+  overflow: hidden;
+  transition: height 0.3s ease;
+}
+
+.modal-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 24px;
+}
+.modal-title { font-size: 1.4rem; font-weight: 700; color: white; margin-bottom: 4px; }
+.modal-step { font-size: 0.85rem; color: var(--primary); font-weight: 600; }
+
+.modal-close {
+  background: rgba(255,255,255,0.1); color: white;
+  border: none; width: 40px; height: 40px; border-radius: 50%;
+  font-size: 1.8rem; line-height: 0; padding-bottom: 6px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: 0.2s;
+}
+.modal-close:hover { background: rgba(255,255,255,0.2); transform: rotate(90deg); }
+
+/* WIZARD CONTENT ANIMATION CONTAINER */
+.wizard-content-wrapper { position: relative; min-height: 120px; }
+
+.slide-in-right { animation: slideInRight 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.slide-out-left { animation: slideOutLeft 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.slide-in-left  { animation: slideInLeft 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.slide-out-right{ animation: slideOutRight 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+
+@keyframes slideInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideOutLeft { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(-30px); } }
+@keyframes slideInLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideOutRight { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(30px); } }
+
+.modal-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 32px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;
+}
+
+.step-dots { display: flex; gap: 6px; }
+.step-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(255,255,255,0.2); transition: 0.3s;
+}
+.step-dot.active { background: var(--primary); transform: scale(1.3); }
+
+/* =========================================
+   8. BUTTONS & WIDGETS
+   ========================================= */
+.btn {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white; border: none;
+  padding: 12px 20px;
+  border-radius: 10px; font-weight: 600; font-size: 0.95rem;
+  cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+  width: auto;
+}
+.btn:active { transform: scale(0.96); }
+
+.btn-secondary {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
+  color: white; padding: 12px 16px; border-radius: 10px; cursor: pointer;
+}
+.btn-sm { padding: 8px 14px; font-size: 0.85rem; width: auto !important; }
+
+#cashOnHandBox {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--primary); color: white; font-weight: 700;
+  padding: 6px 12px; border-radius: 8px;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+}
+
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+.stat-card {
+  background: rgba(255,255,255,0.03); padding: 16px; border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.stat-value {
+  font-size: 1.2rem; font-weight: 700; margin-top: 8px;
+  background: linear-gradient(to right, #fff, #cbd5e1);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.stat-good .stat-value {
+  background: linear-gradient(to right, #60a5fa, #3b82f6);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.stat-warn .stat-value {
+  background: linear-gradient(to right, #fbbf24, #d97706);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+.fab-add { display: none !important; }
+
+/* Welcome Screen */
+.welcome-screen {
+  background: #000; position: fixed; inset: 0; z-index: 3000;
+  display: flex; align-items: center; justify-content: center;
+}
+.welcome-box { text-align: center; width: 90%; max-width: 340px; }
+.welcome-input { margin-bottom: 12px; text-align: center; }
+.welcome-btn { width: 100%; background: var(--primary); border: none; padding: 12px; border-radius: 10px; font-weight: 700; color: white; box-shadow: var(--primary-glow); }
+
+/* =========================================
+   DASHBOARD MINI TABS
+   ========================================= */
+.mini-tabs {
+  display: flex;
+  background: rgba(0,0,0,0.4);
+  padding: 4px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.mini-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mini-tab.active {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.tab-content { display: none; animation: fadeIn 0.3s ease; }
+.tab-content.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* =========================================
+   9. UI ANIMATIONS
+   ========================================= */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.stat-card { animation: fadeUp 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards; }
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.25s; }
+.stat-card:nth-child(3) { animation-delay: 0.4s; }
+.stat-card:nth-child(4) { animation-delay: 0.55s; }
+
+tbody tr { animation: fadeUp 1s ease-out backwards; }
+tbody tr:nth-child(1) { animation-delay: 0.1s; }
+tbody tr:nth-child(2) { animation-delay: 0.2s; }
+tbody tr:nth-child(3) { animation-delay: 0.3s; }
+tbody tr:nth-child(4) { animation-delay: 0.4s; }
+tbody tr:nth-child(5) { animation-delay: 0.5s; }
+
+.card { animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+@keyframes neonPulse {
+  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.6); }
+  50% { box-shadow: 0 0 0 12px rgba(59, 130, 246, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+
+.fab-add:hover { animation: neonPulse 2.5s infinite; }
+
+input:focus, select:focus {
+  transform: translateY(-3px);
+  transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* =========================================
+   10. ALIVE ATMOSPHERE
+   ========================================= */
+@keyframes drift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+body {
+  background-size: 200% 200%;
+  animation: drift 20s ease infinite;
+}
+
+.card { transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.4s ease; }
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3), 0 0 25px rgba(59, 130, 246, 0.15);
+}
+
+@keyframes softBluePulse {
+  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+
+.status-active { animation: softBluePulse 3s infinite; }
+
+tbody tr { transition: all 0.2s ease; }
+tbody tr:hover {
+  transform: scale(1.01);
+  background: rgba(59, 130, 246, 0.08);
+  border-left-color: #60a5fa;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  z-index: 10;
+  position: relative;
+}
+
+/* =========================================
+   11. ALIVE NAVIGATION
+   ========================================= */
+.nav-btn { animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+.nav-btn:nth-child(1) { animation-delay: 0.2s; }
+.nav-btn:nth-child(2) { animation-delay: 0.3s; }
+.nav-btn:nth-child(3) { animation-delay: 0.4s; }
+.nav-btn:nth-child(4) { animation-delay: 0.5s; }
+
+.nav-btn:not(.nav-btn-active):hover {
+  background: rgba(255,255,255,0.1);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  color: white;
+  border-color: rgba(255,255,255,0.3);
+}
+
+.nav-btn-active { animation: softBluePulse 3s infinite; }
+
+/* =========================================
+   12. STAT COLORS
+   ========================================= */
+.stat-purple .stat-value {
+  background: linear-gradient(to right, #e879f9, #c084fc);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 5px rgba(192, 132, 252, 0.4));
+}
+.stat-orange .stat-value {
+  background: linear-gradient(to right, #fbbf24, #f59e0b);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.4));
+}
+.stat-green .stat-value {
+  background: linear-gradient(to right, #4ade80, #22c55e);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 5px rgba(34, 197, 94, 0.4));
+}
+.text-danger-glow {
+  color: #ef4444 !important;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.6) !important;
+  background: none !important;
+  -webkit-text-fill-color: #ef4444 !important;
+}
+
+/* =========================================
+   13. ICON BUTTONS
+   ========================================= */
+.btn-icon {
+  background: transparent; border: none; font-size: 1.1rem; padding: 6px;
+  cursor: pointer; border-radius: 50%; transition: all 0.2s; opacity: 0.7;
+}
+.btn-icon:hover {
+  background: rgba(255,255,255,0.1); transform: scale(1.2); opacity: 1;
+}
+
+/* =========================================
+   14. MODERN REDESIGN
+   ========================================= */
+.filter-container { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+.filter-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-right: 8px; }
+
+.chip {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-muted); padding: 6px 14px; border-radius: 20px;
+  font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.chip:hover { background: rgba(255,255,255,0.1); color: white; }
+.chip.active {
+  background: var(--primary); color: white; border-color: var(--primary);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); transform: translateY(-1px);
+}
+
+.client-flex { display: flex; align-items: center; gap: 12px; }
+.avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, #475569, #1e293b);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 700; color: white;
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3); flex-shrink: 0;
+}
+.avatar-0 { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+.avatar-1 { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.avatar-2 { background: linear-gradient(135deg, #10b981, #047857); }
+.avatar-3 { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+.avatar-4 { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+
+@media (max-width: 768px) {
+  thead { display: none; }
+  tbody tr {
+    display: flex; flex-direction: column;
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px; margin-bottom: 16px; padding: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  }
+  tbody td {
+    display: flex; justify-content: space-between; align-items: center;
+    border: none !important; padding: 8px 0 !important;
+    border-bottom: 1px solid rgba(255,255,255,0.03) !important;
+  }
+  tbody td:last-child { border-bottom: none !important; margin-top: 8px; justify-content: flex-end; gap: 12px; }
+  tbody td::before {
+    content: attr(data-label);
+    font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;
+  }
+}
+
+/* =========================================
+   15. MODERN UI PACK (Scrollbars, Toasts, Inputs)
+   ========================================= */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #020617; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #3b82f6; box-shadow: 0 0 10px #3b82f6; }
+
+#toast-container {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+  z-index: 9999; display: flex; flex-direction: column; gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px);
+  color: white; padding: 12px 24px; border-radius: 100px;
+  font-size: 0.9rem; font-weight: 600;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; gap: 12px;
+  opacity: 0; transform: translateY(-20px) scale(0.9);
+  animation: toastIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.toast.success { border-color: #22c55e; box-shadow: 0 0 25px rgba(34, 197, 94, 0.2); }
+.toast.success span:first-child { color: #4ade80; }
+.toast.error { border-color: #ef4444; box-shadow: 0 0 25px rgba(239, 68, 68, 0.2); }
+.toast.error span:first-child { color: #f87171; }
+
+@keyframes toastIn { to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes toastOut { to { opacity: 0; transform: translateY(-20px) scale(0.9); } }
+
+input, select, textarea {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  transition: all 0.3s ease;
+}
+input:focus, select:focus, textarea:focus {
+  background: rgba(15, 23, 42, 0.8) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3) !important;
+  transform: translateY(-2px);
+}
+/* =========================================
+   17. LOGO IMAGE STYLING (Fixed Zoom)
+   ========================================= */
+.logo-img {
+  height: 60px;            /* Slightly smaller for better fit */
+  width: auto;             /* Maintains aspect ratio */
+
+  /* CRITICAL FIX: Ensures the full logo is visible w/o cropping */
+  object-fit: contain;
+
+  /* Reduced border radius so corners aren't cut off */
+  border-radius: 4px;
+
+  /* The Cyber Blue Glow */
+  /*filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.6));
+
+  /* 3D "Alive" Tilt Effect (Toned down slightly) */
+  transform: perspective(600px) rotateY(10deg);
+  transition: all 0.5s ease;
+
+  margin-right: 12px;
+}
+
+/* Hover Effect */
+.header-brand:hover .logo-img {
+  transform: perspective(600px) rotateY(-10deg) scale(1.05);
+  filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.9));
+}
+/* =========================================
+   18. LOADING SPINNER
+   ========================================= */
+.spinner {
+  width: 50px; height: 50px;
+  border: 3px solid rgba(59, 130, 246, 0.3);
+  border-radius: 50%;
+  border-top-color: #3b82f6;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+} /* <--- This closing bracket was missing! */
+
+/* =========================================
+   19. MOBILE HEADER FIXES (Corrected)
+   ========================================= */
+@media (max-width: 600px) {
+  header {
+    padding: 12px 16px;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .header-brand h1 {
+    font-size: 1.2rem;   /* <--- Fixed: 1.2rem is clean and professional */
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+  }
+
+  .hud-rates {
+    width: 100%;
+    justify-content: center;
+    padding-bottom: 4px;
+  }
+
+  .logo-img {
+    height: 40px; /* Fits perfectly with 1.2rem text */
+    margin-right: 10px;
+  }
+}

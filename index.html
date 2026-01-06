@@ -1,379 +1,364 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Will You Be Mine?</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet" />
-<style>
-  :root{
-    --pink-1:#ff99cc; --pink-2:#ff66b2; --pink-3:#ff3385;
-  }
-  /* Background + base */
-  body {
-    margin: 0;
-    height: 100vh;
-    font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, var(--pink-1), var(--pink-2), var(--pink-3));
-    background-size: 400% 400%;
-    animation: gradientShift 14s ease-in-out infinite;
-    overflow: hidden;
-    color: #fff;
-    text-align: center;
-  }
-  @keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-
-  /* Container card */
-  #container {
-    position: relative;
-    z-index: 2;
-    width: min(92vw, 720px);
-    margin: 0 auto;
-    min-height: 100vh;
-    display: grid;
-    place-items: center;
-    padding: 20px;
-  }
-  .card {
-    width: 100%;
-    backdrop-filter: blur(6px);
-    background: rgba(0,0,0,0.28);
-    border-radius: 20px;
-    padding: clamp(16px, 4vw, 28px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-  }
-
-  /* Intro and question */
-  h2 {
-    font-size: clamp(1rem, 4vw, 1.4rem);
-    font-weight: 600;
-    text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
-    margin: 0 0 16px;
-    opacity: 0; transform: translateY(10px);
-    animation: fadeUp 0.8s 0.4s forwards;
-  }
-  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-
-  h1 {
-    font-size: clamp(1.6rem, 6vw, 2.6rem);
-    font-weight: 800;
-    text-transform: uppercase;
-    text-shadow: 2px 2px 10px #000, 0 0 18px #ff69b4;
-    margin: 10px 0 16px;
-    opacity: 0; transform: translateY(-12px);
-    transition: all 0.6s ease;
-  }
-
-  .button-row {
-    display: flex;
-    gap: clamp(12px, 3vw, 22px);
-    justify-content: center;
-    flex-wrap: wrap;
-    margin: 10px 0 0;
-    opacity: 0; transform: translateY(12px);
-    transition: all 0.6s ease;
-  }
-
-  /* Buttons */
-  button {
-    padding: clamp(10px, 3vw, 18px) clamp(20px, 6vw, 44px);
-    border: none; border-radius: 16px;
-    font-size: clamp(1rem, 4vw, 1.2rem);
-    font-weight: 700; color: #fff;
-    text-shadow: 1px 1px 3px #000;
-    cursor: pointer;
-    transition: transform .25s ease, box-shadow .25s ease, background .3s ease;
-    position: relative; overflow: hidden;
-  }
-  button:hover { transform: translateY(-3px) scale(1.03); }
-
-  .yes {
-    background: linear-gradient(135deg, #ff0000, #000000);
-    animation: yesGlow 2.2s ease-in-out infinite alternate;
-    box-shadow: 0 0 14px rgba(255,26,117,.55);
-  }
-  @keyframes yesGlow {
-    from { box-shadow: 0 0 10px #ff4da6, 0 0 20px #ff3385; }
-    to   { box-shadow: 0 0 22px #ff66cc, 0 0 44px #ff3399; }
-  }
-  .yes::before, .yes::after{
-    content:"✨";
-    position:absolute; opacity:.85;
-    filter: drop-shadow(0 0 6px rgba(255,255,255,.5));
-  }
-  .yes::before{ top:-8px; left:14%; font-size:1.1rem; animation: sparkle 2s infinite; }
-  .yes::after { bottom:-10px; right:12%; font-size:1.4rem; animation: sparkle 3s infinite alternate; }
-  @keyframes sparkle {
-    0%{ transform: scale(.85) rotate(0deg); opacity:.5; }
-    50%{ transform: scale(1.2) rotate(18deg); opacity:1; }
-    100%{ transform: scale(.85) rotate(0deg); opacity:.5; }
-  }
-
-  .no {
-    background: linear-gradient(135deg, #ff6b6b, #c0392b);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.35);
-  }
-  .no:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.45); }
-
-  /* Confirmation text + GIF */
-  #confirmation {
-    margin-top: 14px;
-    color: #fff;
-    text-shadow: 0 0 8px #fff, 0 0 16px #ff2e72, 0 0 24px #ff9ac7;
-    transition: transform .6s ease, opacity 1s ease;
-    text-transform: uppercase;
-    font-size: clamp(1.4rem, 6vw, 2.4rem);
-    font-weight: 800; opacity: 0;
-  }
-  #yesGif {
-    width: clamp(120px, 38vw, 200px);
-    display: none; margin: 16px auto 0;
-  }
-
-  /* Floating emojis (background) */
-  .floating {
-    position: fixed;
-    left: 0; top: -40px;
-    font-size: clamp(16px, 5vw, 26px);
-    animation: floatDown 6.5s linear;
-    pointer-events: none; z-index: 1;
-  }
-  @keyframes floatDown {
-    0% { transform: translateY(-60px); opacity: .98; }
-    100% { transform: translateY(110vh); opacity: 0; }
-  }
-
-  /* Confirmation modal */
-  .modal-backdrop{
-    position: fixed; inset: 0; z-index: 20;
-    background: rgba(0,0,0,.35); backdrop-filter: blur(4px);
-    display: none; align-items: center; justify-content: center;
-    animation: fadeIn .3s ease;
-  }
-  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-
-  .modal{
-    width: min(92vw, 560px);
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.18);
-    border-radius: 18px;
-    padding: clamp(16px, 4vw, 28px);
-    box-shadow: 0 20px 50px rgba(0,0,0,.35);
-    transform: scale(.9); opacity: 0;
-    animation: popIn .35s .05s ease forwards;
-    text-align: center;
-  }
-  @keyframes popIn { to{ transform: scale(1); opacity: 1; } }
-
-  .modal h3{
-    margin: 0 0 14px;
-    font-size: clamp(1.2rem, 5vw, 1.8rem);
-    font-weight: 800;
-    text-transform: uppercase;
-    text-shadow: 0 0 14px #ffb6dc, 0 0 28px #ff5aa0;
-  }
-  .modal .row{
-    display:flex; gap: clamp(10px,3vw,18px); justify-content:center; flex-wrap:wrap;
-    margin-top: 8px;
-  }
-  .modal .yes, .modal .no{ font-size: clamp(0.95rem, 4vw, 1.1rem); }
-
-  /* Countdown pop effect */
-  .countPop { animation: countPop .45s ease forwards; }
-  @keyframes countPop {
-    0%{ transform: scale(0); opacity:0; }
-    60%{ transform: scale(1.3); opacity:1; }
-    100%{ transform: scale(1); opacity:1; }
-  }
-</style>
+  <meta charset="UTF-8" />
+  <title>STALLZ LOANS — Loan Manager</title>
+    <link rel="icon" type="image/png" href="myfavicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
+<div id="loadingOverlay" style="position:fixed; inset:0; background:#020617; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; transition: opacity 0.5s;">
+  <div class="spinner"></div>
+  <div style="margin-top:20px; color:#3b82f6; font-family:sans-serif; font-weight:bold; letter-spacing:1px; animation: pulse 1.5s infinite;">CONNECTING...</div>
+</div>
 
-<!-- floating emojis (💖 🌹 💕 ✨ 🦋 🎀) -->
-<script>
-  (function startFloating(){
-    const emojis = ["💖","🌹","💕","✨","🦋","🎀"];
-    function dropEmoji(){
-      const e = document.createElement('div');
-      e.className = 'floating';
-      e.textContent = emojis[Math.floor(Math.random()*emojis.length)];
-      e.style.left = Math.random()*100 + 'vw';
-      e.style.animationDuration = (4 + Math.random()*4) + 's';
-      e.style.fontSize = (18 + Math.random()*20) + 'px';
-      e.style.opacity = 0.9 - Math.random()*0.3;
-      document.body.appendChild(e);
-      setTimeout(()=> e.remove(), 9000);
-    }
-    // faster spawn = more emojis 🎉
-    setInterval(dropEmoji, 350);
-  })();
-</script>
+  <div id="welcomeScreen" class="welcome-screen">
+  <div class="welcome-box">
+    <h1 class="welcome-title" style="color:white; margin-bottom:10px;">STALLZ LOANS</h1>
+    <h2 class="welcome-subtitle" style="color:#94a3b8; font-size:1rem; margin-bottom:24px;">Secure Admin Login</h2>
 
-<div id="container">
-  <div class="card" id="card">
-    <!-- Intro -->
-    <h2 id="introText">Took me a while to get here, and it’s kinda nerve-racking that the girl I only dreamt would be mine can finally be mine.</h2>
+    <div id="welcomeLogin">
+      <p class="welcome-info" style="color:#64748b; font-size:0.85rem; margin-bottom:16px;">Sign in to access the cloud loan book</p>
+      <input type="email" id="loginEmail" placeholder="Email" class="welcome-input">
+      <input type="password" id="loginPassword" placeholder="Password" class="welcome-input">
+      <button id="authLoginBtn" class="welcome-btn">Login</button>
+      <p id="authError" style="color:#f87171; font-size:0.75rem; margin-top:10px;"></p>
+    </div>
+  </div>
+</div>
 
-    <!-- Press -->
-    <button id="pressBtn" class="yes" style="margin-top:6px;">Press Me 💌</button>
-
-    <!-- Question -->
-    <div id="question" style="display:none;">
-      <h1 id="mainQuestion">WILL YOU BE MINE? 💕</h1>
-      <div class="button-row" id="choices">
-        <button class="yes" id="yesBtn">Yes 💖</button>
-        <button class="no" id="noBtn">No 💔</button>
+  <div class="app-shell">
+    <header>
+      <div class="header-brand">
+        <h1>
+  <img src="my-logo.png" class="logo-img">
+  STALLZ LOANS
+</h1>
       </div>
-      <p id="confirmation"></p>
-      <img id="yesGif" src="https://i.imgur.com/4TJEb32.gif" alt="Celebration GIF">
+      <div class="hud-rates">
+        <div class="hud-badge">20% <span>Wk</span></div>
+        <div class="hud-badge">30% <span>2Wk</span></div>
+        <div class="hud-badge">35% <span>3Wk</span></div>
+        <div class="hud-badge ">40% <span>Mo</span></div>
+      </div>
+    </header>
+
+    <div class="top-nav">
+      <button class="nav-btn nav-btn-active" data-view="main" id="navMainBtn">
+        <span class="icon">📊</span> Overview
+      </button>
+      <button class="nav-btn" data-view="monthly" id="navMonthlyBtn">
+        <span class="icon">📆</span> Monthly Cash Flow
+      </button>
+      <button class="nav-btn" data-view="clients" id="navClientsBtn">
+        <span class="icon">👤</span> Clients
+      </button>
+      <button class="nav-btn" data-view="admins" id="navAdminsBtn">
+        <span class="icon">👥</span> Admin Profiles
+      </button>
+    </div>
+
+    <main>
+      <div id="view-main" class="layout">
+
+        <section class="card">
+          <div class="card-inner">
+            <h2>
+              <span>Dashboard</span>
+              <button id="openLoanModalBtn" class="btn btn-sm" type="button">
+                ＋ Add Loan
+              </button>
+            </h2>
+
+            <div class="mini-tabs">
+              <button class="mini-tab active" data-target="cap-status">📊 Status</button>
+              <button class="mini-tab" data-target="cap-actions">➕ Manage Capital</button>
+            </div>
+
+            <div id="cap-status" class="tab-content active">
+               <div class="stat-card" style="margin-top:16px; text-align:center; padding:24px;">
+                  <div class="stat-label">Estimated Cash on Hand</div>
+                  <div class="stat-value" id="cashOnHandValue" style="font-size:1.8rem; margin:8px 0;">K0.00</div>
+                  <div class="stat-sub" style="opacity:0.7">Available to lend</div>
+               </div>
+
+               <div style="margin-top:16px; display:flex; justify-content:space-between; padding:0 8px;">
+                  <div style="font-size:0.8rem; color:var(--text-muted);">Starting Capital:</div>
+                  <div id="startingCapitalValue" style="font-size:0.9rem; font-weight:600;">K0.00</div>
+               </div>
+            </div>
+
+            <div id="cap-actions" class="tab-content">
+              <div class="field" id="startingCapitalSetupRow" style="margin-top:16px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:16px;">
+                <label>Set Initial Capital (One Time)</label>
+                <div style="display:flex; gap:8px;">
+                   <input type="number" id="startingCapitalInitial" placeholder="e.g. 10000" />
+                   <button type="button" id="setStartingCapitalBtn" class="btn-secondary btn-sm">Set</button>
+                </div>
+                <small style="color:var(--text-muted); font-size:0.75rem; display:block; margin-top:6px;">
+                   Only do this once when you start.
+                </small>
+              </div>
+
+              <div id="startingCapitalInfoRow" style="display:none; margin-top:16px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:16px;">
+                 <label style="color:#3b82f6;">✔ Initial Capital Set</label>
+                 <div style="font-size:1.1rem; font-weight:600; margin-top:4px;">
+                    <span id="startingCapitalInfoValue">K0.00</span>
+                 </div>
+                 <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
+                    Set on: <span id="startingCapitalInfoDate">-</span>
+                 </div>
+              </div>
+
+              <div class="field" style="margin-top:16px;">
+                <label>Inject New Capital</label>
+                <div style="display:flex; gap:8px;">
+                  <input type="number" id="addCapitalInput" placeholder="Amount (e.g. 2000)" />
+                  <button type="button" id="addCapitalBtn" class="btn btn-sm">Add</button>
+                </div>
+                <small style="color:var(--text-muted); font-size:0.75rem; display:block; margin-top:6px;">
+                   Adds money to your pool (recorded in ledger).
+                </small>
+              </div>
+            </div>
+
+            <div class="section-title">Capital Ledger</div>
+            <div class="table-wrapper" style="max-height:180px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Amt</th>
+                    <th>Note</th>
+                  </tr>
+                </thead>
+                <tbody id="capitalTableBody"></tbody>
+              </table>
+            </div>
+
+            <div class="section-title">Overview Stats</div>
+            <div class="stats-grid" id="dashboardStats"></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-inner">
+            <h2>
+              <span>Loans</span>
+              <span class="label" id="loansCountLabel">0 records</span>
+            </h2>
+
+            <div class="filters-row">
+              <div class="field" style="margin-bottom:16px;">
+              <input type="text" id="searchInput" placeholder="🔍 Search Client, Item, ID..."
+                     style="padding:16px; border-radius:12px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1);">
+            </div>
+
+            <div class="filter-container">
+              <span class="filter-label">STATUS:</span>
+              <button class="chip active" onclick="setFilter('status', 'All', this)">All</button>
+              <button class="chip" onclick="setFilter('status', 'ACTIVE', this)">Active</button>
+              <button class="chip" onclick="setFilter('status', 'OVERDUE', this)">Overdue</button>
+              <button class="chip" onclick="setFilter('status', 'PAID', this)">Paid</button>
+            </div>
+
+            <div class="filter-container">
+               <span class="filter-label">PLAN:</span>
+               <button class="chip active" onclick="setFilter('plan', 'All', this)">All</button>
+               <button class="chip" onclick="setFilter('plan', 'Weekly', this)">Weekly</button>
+               <button class="chip" onclick="setFilter('plan', '2 Weeks', this)">2 Weeks</button>
+               <button class="chip" onclick="setFilter('plan', 'Monthly', this)">Monthly</button>
+            </div>
+            </div>
+
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th width="50">ID</th>
+                    <th width="140">Client</th>
+                    <th width="120">Item</th>
+                    <th width="180">Repayment Progress</th>
+                    <th width="100">Start</th>
+                    <th width="100">Due</th>
+                    <th width="100">Balance</th>
+                    <th width="90">Status</th>
+                    <th width="100" style="text-align:right;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="loansTableBody"></tbody>
+              </table>
+              <div id="emptyState" class="empty-state" style="display:none; padding:20px; text-align:center; color:#94a3b8;">
+                <span class="icon" style="font-size:2rem;">🧾</span>
+                <div>No loans yet.</div>
+                <div>Click <strong>Add Loan</strong> to start your book.</div>
+              </div>
+            </div>
+
+            <div class="btn-group" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+              <button type="button" id="exportBtn" class="btn-secondary btn-sm" style="background: #107c41; border-color: #107c41; color: white;">
+                Export Excel
+              </button>
+            </div>
+
+            <div class="section-title" style="margin-top:20px;">Repayments History</div>
+            <div class="table-wrapper" style="max-height:260px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Loan</th>
+                    <th>Client</th>
+                    <th>Payer</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody id="repaymentsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="view-monthly" class="view-hidden">
+        <section class="card">
+          <div class="card-inner">
+            <h2>
+              <span>Monthly Cash Flow</span>
+              <span class="label">Loans out vs money in</span>
+            </h2>
+            <div class="table-wrapper" style="max-height:520px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Month</th>
+                    <th>Loans Out</th>
+                    <th>Repayments In</th>
+                    <th>Sales In</th>
+                    <th>Net Flow</th>
+                  </tr>
+                </thead>
+                <tbody id="monthlyTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="view-clients" class="view-hidden">
+        <section class="card">
+          <div class="card-inner">
+            <h2>
+              <span>Clients</span>
+              <span class="label" id="clientsCountLabel">0 clients</span>
+            </h2>
+            <div class="table-wrapper" style="max-height:520px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Client</th>
+                    <th>Phone</th>
+                    <th># Loans</th>
+                    <th>Borrowed</th>
+                    <th>Paid In</th>
+                    <th>Sales</th>
+                    <th>Balance</th>
+                    <th>Active / Overdue</th>
+                  </tr>
+                </thead>
+                <tbody id="clientsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="view-admins" class="view-hidden">
+        <section class="card">
+          <div class="card-inner">
+            <h2>
+              <span>Admin Profiles</span>
+              <span class="label" id="adminsCountLabel">0 admins</span>
+            </h2>
+            <p class="subtle" style="color:#94a3b8; margin-bottom:16px;">
+              Record who has access to this loan book (local only, not real online logins).
+            </p>
+            <div class="section-title">Admin List</div>
+            <div class="table-wrapper" style="max-height:400px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Phone</th>
+                  </tr>
+                </thead>
+                <tbody id="adminsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <button class="btn fab-add" id="fabAddBtn" type="button">＋</button>
+
+  <div id="loanModal" class="modal-overlay modal-hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">New Loan</div>
+          <div id="modalStepLabel" class="modal-step">Step 1</div>
+        </div>
+        <button type="button" id="modalCloseBtn" class="modal-close">-</button>
+      </div>
+
+      <div id="wizardWrapper" class="wizard-content-wrapper">
+        <div class="field">
+          <div id="modalFieldLabel" class="modal-field-label" style="font-size:0.9rem; color:#94a3b8; margin-bottom:8px;"></div>
+          <div id="modalFieldContainer"></div>
+        </div>
+        <div id="modalHelper" class="modal-helper" style="font-size:0.8rem; color:#64748b; margin-top:8px;"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="modalBackBtn" class="btn-secondary btn-sm" style="visibility:hidden;">← Back</button>
+        <div id="modalStepDots" class="step-dots"></div>
+        <button type="button" id="modalNextBtn" class="btn btn-sm">Next →</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ARE YOU SURE modal -->
-<div class="modal-backdrop" id="sureBackdrop" aria-hidden="true">
-  <div class="modal">
-    <h3>ARE YOU SURE? 💞</h3>
-    <div class="row">
-      <button class="yes" id="sureYes">YES, I’M SURE</button>
-      <button class="no" id="sureNo">LET ME THINK</button>
+  <div id="actionModal" class="modal-overlay modal-hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <div id="actionModalTitle" class="modal-title">Action</div>
+          <div id="actionModalSubtitle" class="modal-step"></div>
+        </div>
+        <button type="button" id="actionModalCloseBtn" class="modal-close">-</button>
+      </div>
+      <div class="modal-body">
+        <div id="actionModalBody"></div>
+        <div id="actionModalHelper" class="modal-helper" style="margin-top:10px; color:#94a3b8; font-size:0.8rem;"></div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
+        <button type="button" id="actionModalCancelBtn" class="btn-secondary btn-sm">Cancel</button>
+        <button type="button" id="actionModalConfirmBtn" class="btn btn-sm">Confirm</button>
+      </div>
     </div>
   </div>
-</div>
+  <div id="toast-container"></div>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDEtUyZdmwIvPMewuF9giOcEzXGzbPVNQA",
-    authDomain: "answers-8cc49.firebaseapp.com",
-    databaseURL: "https://answers-8cc49-default-rtdb.firebaseio.com",
-    projectId: "answers-8cc49",
-    storageBucket: "answers-8cc49.firebasestorage.app",
-    messagingSenderId: "193637729462",
-    appId: "1:193637729462:web:cbdab1fc6ccdc03b7c5217",
-    measurementId: "G-72VRSYE7BS"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-</script>
 
-<script>
-  const pressBtn = document.getElementById('pressBtn');
-  const questionDiv = document.getElementById('question');
-  const mainQuestion = document.getElementById('mainQuestion');
-  const choices = document.getElementById('choices');
-  const introText = document.getElementById('introText');
-  const confirmation = document.getElementById('confirmation');
-  const yesGif = document.getElementById('yesGif');
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="app.js"></script>
 
-  const sureBackdrop = document.getElementById('sureBackdrop');
-  const sureYes = document.getElementById('sureYes');
-  const sureNo  = document.getElementById('sureNo');
-
-  let pendingAnswer = null;
-
-  pressBtn.onclick = () => {
-    questionDiv.style.display = 'block';
-    pressBtn.style.display = 'none';
-    setTimeout(() => {
-      mainQuestion.style.opacity = '1';
-      mainQuestion.style.transform = 'translateY(0)';
-      choices.style.opacity = '1';
-      choices.style.transform = 'translateY(0)';
-    }, 80);
-  };
-
-  // Open confirmation modal
-  document.getElementById('yesBtn').onclick = () => openSure('Yes');
-  document.getElementById('noBtn').onclick  = () => openSure('No');
-
-  function openSure(ans){
-    pendingAnswer = ans;
-    sureBackdrop.style.display = 'flex';
-    sureBackdrop.setAttribute('aria-hidden', 'false');
-  }
-
-  // Modal actions
-  sureYes.onclick = () => {
-    sureBackdrop.style.display = 'none';
-    sureBackdrop.setAttribute('aria-hidden', 'true');
-    saveAnswer(pendingAnswer);
-  };
-  sureNo.onclick = () => {
-    sureBackdrop.style.display = 'none';
-    sureBackdrop.setAttribute('aria-hidden', 'true');
-    pendingAnswer = null;
-  };
-
-  function showFinalMessage(answer) {
-    confirmation.style.opacity = 1;
-    confirmation.style.transform = 'scale(0)';
-    setTimeout(() => {
-      confirmation.style.transform = 'scale(1.15)';
-      setTimeout(() => { confirmation.style.transform = 'scale(1)'; }, 500);
-    }, 150);
-
-    if (answer === 'Yes') {
-      confirmation.textContent = "YOU JUST MADE ME THE HAPPIEST SPIDERHEAD ALIVE! ❤️";
-      yesGif.style.display = 'block';
-    } else {
-      confirmation.textContent = "I’M DISAPPOINTED… 💔";
-      yesGif.style.display = 'none';
-    }
-  }
-
-  function saveAnswer(answer){
-    localStorage.setItem('herAnswer', answer);
-    db.ref('answers').push({ answer, timestamp: new Date().toISOString() });
-
-    introText.style.opacity = 0;
-    mainQuestion.style.opacity = 0;
-    choices.style.opacity = 0;
-
-    setTimeout(() => {
-      introText.style.display = 'none';
-      mainQuestion.style.display = 'none';
-      choices.style.display = 'none';
-
-      let n = 3;
-      confirmation.style.opacity = 1;
-      confirmation.style.fontSize = 'clamp(1.8rem, 8vw, 3.2rem)';
-      confirmation.textContent = n;
-      confirmation.classList.add('countPop');
-
-      const iv = setInterval(() => {
-        n--;
-        if (n > 0) {
-          confirmation.textContent = n;
-          confirmation.classList.remove('countPop');
-          void confirmation.offsetWidth; 
-          confirmation.classList.add('countPop');
-        } else {
-          clearInterval(iv);
-          confirmation.style.fontSize = 'clamp(1.4rem, 6vw, 2.4rem)';
-          showFinalMessage(answer);
-        }
-      }, 1000);
-    }, 420);
-  }
-
-  window.onload = () => {
-    const saved = localStorage.getItem('herAnswer');
-    if (saved) {
-      pressBtn.style.display = 'none';
-      questionDiv.style.display = 'block';
-      document.getElementById('choices').style.display = 'none';
-      introText.style.display = 'none';
-      confirmation.style.opacity = 1;
-      showFinalMessage(saved);
-    }
-  };
-</script>
 </body>
 </html>
