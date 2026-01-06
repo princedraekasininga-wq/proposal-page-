@@ -299,67 +299,45 @@ header {
   }
 }
 
+/* ... (Keep the Floating Pill Dock section above this) ... */
+
 /* =========================================
-   MOBILE: Fixed Bottom Bar (App Style)
+   4. LAYOUT & CARDS
    ========================================= */
-@media (max-width: 768px) {
+/* ... (The rest of your CSS remains the same) ... */
 
-  /* 1. Push body content up so it doesn't hide behind the bar */
-  body { padding-bottom: 90px; }
+/* ... Scroll to the very bottom ... */
 
-  /* 2. Fix the bar to the bottom */
-  .top-nav {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    z-index: 1000;
-
-    background: rgba(15, 23, 42, 0.95); /* Dark Glass */
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255,255,255,0.15);
-    border-bottom: none;
-
-    margin: 0;
-    padding: 8px 0 24px 0; /* Extra padding for iPhone Swipe Bar */
-
-    justify-content: space-around; /* Spread buttons evenly */
-    gap: 0;
-  }
-
-  /* 3. Stack Icon on top of Text */
-  .nav-btn {
+/* =========================================
+   19. MOBILE HEADER FIXES (Corrected)
+   ========================================= */
+@media (max-width: 600px) {
+  header {
+    padding: 12px 16px;
     flex-direction: column;
     align-items: center;
+    gap: 16px;
+  }
+
+  .header-brand h1 {
+    font-size: 1.2rem;
     justify-content: center;
-    gap: 4px;
-
-    font-size: 0.7rem; /* Smaller text */
-    color: #64748b;
-    border-bottom: none; /* No line on mobile */
-    padding: 8px;
-    flex: 1; /* Make touch targets wide */
+    width: 100%;
+    text-align: center;
   }
 
-  /* 4. Make icons bigger and touch-friendly */
-  .nav-btn .icon {
-    font-size: 1.4rem;
-    display: block;
-    margin-bottom: 2px;
-    transition: 0.2s;
+  .hud-rates {
+    width: 100%;
+    justify-content: center;
+    padding-bottom: 4px;
   }
 
-  /* 5. Mobile Active State (Glows blue) */
-  .nav-btn-active {
-    color: #60a5fa; /* Light Blue */
-    background: transparent;
-    text-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
-  }
-
-  .nav-btn-active .icon {
-    transform: translateY(-3px);
-    filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
+  .logo-img {
+    height: 40px;
+    margin-right: 10px;
   }
 }
+
 /* =========================================
    4. LAYOUT & CARDS
    ========================================= */
@@ -949,4 +927,3 @@ input:focus, select:focus, textarea:focus {
     height: 40px; /* Fits perfectly with 1.2rem text */
     margin-right: 10px;
   }
-}
