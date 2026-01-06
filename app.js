@@ -437,6 +437,18 @@ function renderDashboard() {
 }
 
 function renderLoansTable() {
+// Check for issues and show badge
+  const overdueCount = (state.loans || []).filter(l => l.status === "OVERDUE").length;
+  const badge = el("clientBadge");
+
+  if (badge) {
+    if (overdueCount > 0) {
+      badge.classList.add("show");
+    } else {
+      badge.classList.remove("show");
+    }
+  }
+
   const tbody = el("loansTableBody");
   if (!tbody) return;
 
@@ -845,6 +857,23 @@ function init() {
          showToast("Export failed. Check internet connection.", "error");
          console.error(e);
      }
+  });
+  // SMART HIDE NAVIGATION
+  let lastScroll = 0;
+  const nav = document.querySelector('.top-nav');
+
+  window.addEventListener('scroll', () => {
+    const currentScroll = window.pageYOffset;
+
+    // If scrolling DOWN and not at the top
+    if (currentScroll > lastScroll && currentScroll > 50) {
+      nav.classList.add('nav-hidden');
+    }
+    // If scrolling UP
+    else {
+      nav.classList.remove('nav-hidden');
+    }
+    lastScroll = currentScroll;
   });
 
   // Filters

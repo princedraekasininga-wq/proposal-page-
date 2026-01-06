@@ -927,3 +927,20 @@ input:focus, select:focus, textarea:focus {
     height: 40px; /* Fits perfectly with 1.2rem text */
     margin-right: 10px;
   }
+  /* Hide the nav bar when scrolling down */
+.nav-hidden {
+  transform: translate(-50%, 150%) !important; /* Slide down out of view */
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* Red Notification Badge */
+.nav-badge {
+  position: absolute;
+  top: 5px; right: 25%;
+  background: #ef4444;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 2px solid #020617; /* Matches bg to look 'cut out' */
+  box-shadow: 0 0 5px rgba(239, 68, 68, 0.8);
+  display: none; /* Hidden by default */
+}
+.nav-badge.show { display: block; }
