@@ -655,27 +655,60 @@ function renderMonthlyTable() {
 function renderClientsTable() {
   const tbody = el("clientsTableBody");
   if (!tbody) return;
-  const map = {};
+
+  // 1. Group loans by Client Name
+  const clientMap = {};
+
   (state.loans || []).forEach(loan => {
     const name = (loan.clientName || "Unknown").trim();
-    if (!map[name]) map[name] = { phone: loan.clientPhone, count: 0, borrowed: 0, paid: 0, active: 0 };
-    map[name].count++;
-    map[name].borrowed += Number(loan.amount || 0);
-    map[name].paid += Number(loan.paid || 0);
-    if (loan.status === "ACTIVE" || loan.status === "OVERDUE") map[name].active++;
+    if (!clientMap[name]) {
+      clientMap[name] = {
+        name: name,
+        phone: loan.clientPhone,
+        loans: []
+      };
+    }
+    clientMap[name].loans.push(loan);
   });
-  tbody.innerHTML = Object.keys(map).map(name => {
-    const c = map[name];
-    const statusHtml = c.active > 0 ? '<span class="status-pill status-active">Active</span>' : '<span class="status-pill status-paid">Clear</span>';
+
+  // 2. Calculate Stats (Using your improved logic)
+  const clientRows = Object.values(clientMap).map(c => {
+    // Summing up totals based on the grouped loans
+    const borrowed = c.loans.reduce((s, l) => s + (Number(l.amount) || 0), 0);
+    const paid = c.loans.reduce((s, l) => s + (Number(l.paid) || 0), 0);
+
+    // IMPORTANT: Sums the actual calculated balance of each loan (includes interest)
+    const balance = c.loans.reduce((s, l) => s + (Number(l.balance) || 0), 0);
+
+    // Check if they have any active/overdue loans
+    const activeCount = c.loans.filter(l => l.status === "ACTIVE" || l.status === "OVERDUE").length;
+
+    return {
+      name: c.name,
+      phone: c.phone,
+      count: c.loans.length,
+      borrowed,
+      paid,
+      balance,
+      activeCount
+    };
+  });
+
+  // 3. Render the Table
+  tbody.innerHTML = clientRows.map(c => {
+    const statusHtml = c.activeCount > 0
+        ? '<span class="status-pill status-active">Active</span>'
+        : '<span class="status-pill status-paid">Clear</span>';
+
     return `
     <tr>
-      <td data-label="Client">${name}</td>
+      <td data-label="Client">${c.name}</td>
       <td data-label="Phone">${c.phone||"-"}</td>
       <td data-label="Loans">${c.count}</td>
       <td data-label="Borrowed">${formatMoney(c.borrowed)}</td>
       <td data-label="Paid">${formatMoney(c.paid)}</td>
       <td data-label="Sales">-</td>
-      <td data-label="Balance">${formatMoney(c.borrowed - c.paid)}</td>
+      <td data-label="Balance">${formatMoney(c.balance)}</td>
       <td data-label="Status">${statusHtml}</td>
     </tr>`;
   }).join("");

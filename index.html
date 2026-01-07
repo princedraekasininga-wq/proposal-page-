@@ -47,18 +47,19 @@
 
     <div class="top-nav">
       <button class="nav-btn nav-btn-active" data-view="main" id="navMainBtn">
-        <span class="icon">📊</span> Overview
+        <span class="icon">
+          📊
+          <div id="clientBadge" class="nav-badge"></div>
+        </span>
+        Overview
       </button>
+
       <button class="nav-btn" data-view="monthly" id="navMonthlyBtn">
         <span class="icon">📆</span> Monthly Cash Flow
       </button>
 
-      <button class="nav-btn" data-view="clients" id="navClientsBtn" style="position: relative;">
-        <span class="icon">
-          👤
-          <div id="clientBadge" class="nav-badge"></div>
-        </span>
-        Clients
+      <button class="nav-btn" data-view="clients" id="navClientsBtn">
+        <span class="icon">👤</span> Clients
       </button>
 
       <button class="nav-btn" data-view="admins" id="navAdminsBtn">
@@ -175,6 +176,7 @@
                <button class="chip active" onclick="setFilter('plan', 'All', this)">All</button>
                <button class="chip" onclick="setFilter('plan', 'Weekly', this)">Weekly</button>
                <button class="chip" onclick="setFilter('plan', '2 Weeks', this)">2 Weeks</button>
+                <button class="chip" onclick="setFilter('plan', '3 Weeks', this)">3 Weeks</button>
                <button class="chip" onclick="setFilter('plan', 'Monthly', this)">Monthly</button>
             </div>
             </div>
