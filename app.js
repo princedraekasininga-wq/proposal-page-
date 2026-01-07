@@ -12,21 +12,34 @@ const firebaseConfig = {
   measurementId: "G-ZELECKK94M"
 };
 
+let db, dataRef;
+
 // Initialize Firebase safely
 try {
-  firebase.initializeApp(firebaseConfig);
+  if (typeof firebase !== "undefined") {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    dataRef = db.ref("loanManagerData_v5");
+  } else {
+    console.warn("Firebase SDK not loaded. Running in Offline/Test Mode.");
+  }
 } catch (e) {
   console.error("Firebase Init Error (Ignore if offline):", e);
 }
-
-const db = firebase.database();
-const dataRef = db.ref("loanManagerData_v5");
-
 // ==========================================
 // 2. HELPER FUNCTIONS & CONSTANTS
 // ==========================================
 
 function el(id) { return document.getElementById(id); }
+
+// Get local date string YYYY-MM-DD for input fields (Fixes timezone lag)
+function getLocalDateVal() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 // --- TOAST HELPER ---
 function showToast(message, type = "success") {
@@ -47,6 +60,17 @@ function showToast(message, type = "success") {
     setTimeout(() => toast.remove(), 500);
   }, 3500);
 }
+
+
+// --- SESSION MANAGEMENT ---
+function updateSessionActivity() {
+  localStorage.setItem("stallz_last_active", Date.now());
+}
+
+// Add listeners to track activity (clicks or key presses)
+document.addEventListener("click", updateSessionActivity);
+document.addEventListener("keydown", updateSessionActivity);
+document.addEventListener("touchstart", updateSessionActivity);
 
 // --- ROLLING COUNTER ANIMATION ---
 function animateValue(obj, start, end, duration) {
@@ -132,46 +156,78 @@ function showWelcomeScreen() {
   const screen = el("welcomeScreen");
   const loginBtn = el("authLoginBtn");
   const errorMsg = el("authError");
-  const loader = el("loadingOverlay"); // <--- GET THE LOADER ELEMENT
+  const loader = el("loadingOverlay");
 
-  if (TEST_MODE) {
-    console.log("⚠️ RUNNING IN TEST MODE");
-    state.user = { email: "test@admin.com", uid: "test-user-123" };
-    state.isLoggedIn = true;
-    screen.style.display = "none";
-    loadFromFirebase();
-    return;
+  // 1. DEFAULT: Hide Loader immediately
+  if (loader) loader.style.display = "none";
+
+  // 2. CHECK SESSION (Auto-Logout Logic)
+  const lastActive = localStorage.getItem("stallz_last_active");
+  const now = Date.now();
+  const THIRTY_MINUTES = 30 * 60 * 1000;
+
+  if (lastActive && (now - lastActive > THIRTY_MINUTES)) {
+    console.log("Session expired. Logging out.");
+    if (typeof firebase !== "undefined" && firebase.auth) firebase.auth().signOut();
+    localStorage.removeItem("stallz_last_active");
+    screen.style.display = "flex";
+  } else {
+    if (typeof firebase !== "undefined" && firebase.auth) {
+      firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+          updateSessionActivity();
+          state.user = user;
+          state.isLoggedIn = true;
+          if (loader) { loader.style.display = "flex"; loader.style.opacity = "1"; }
+          screen.style.display = "none";
+          loadFromFirebase();
+        } else {
+          screen.style.display = "flex";
+        }
+      });
+    } else if (TEST_MODE) {
+        screen.style.display = "flex";
+    }
   }
 
-  firebase.auth().onAuthStateChanged((user) => {
-    if (user) {
-      state.user = user;
-      state.isLoggedIn = true;
-      screen.style.display = "none";
-      loadFromFirebase();
-    } else {
-      // USER IS LOGGED OUT
-      screen.style.display = "flex";
-
-      // FIX: Hide the spinner so they can see the Login Screen
-      if (loader) loader.style.display = "none";
-    }
-  });
-
+  // 3. LOGIN BUTTON LOGIC (This was missing in your code!)
   if (loginBtn) {
     loginBtn.onclick = async () => {
       const email = el("loginEmail").value.trim();
       const password = el("loginPassword").value.trim();
-      if (!email || !password) { errorMsg.textContent = "Please enter both email and password."; return; }
+
+      if (!email || !password) {
+        errorMsg.textContent = "Please enter both email and password.";
+        return;
+      }
+
+      // Show loader
+      if (loader) { loader.style.display = "flex"; loader.style.opacity = "1"; }
+
+      // --- BYPASS AUTH IN TEST MODE ---
+      if (TEST_MODE) {
+        console.log("TEST MODE: Bypassing Firebase Auth");
+        setTimeout(() => {
+          state.user = { email: email || "test@admin.com", uid: "test-user-123" };
+          state.isLoggedIn = true;
+          updateSessionActivity();
+          screen.style.display = "none";
+          loadFromFirebase();
+        }, 1000);
+        return;
+      }
+
       try {
+        if (typeof firebase === "undefined") throw new Error("Firebase not loaded");
         await firebase.auth().signInWithEmailAndPassword(email, password);
+        updateSessionActivity();
       } catch (error) {
+        if (loader) loader.style.display = "none";
         errorMsg.textContent = "Login failed: " + error.message;
       }
     };
   }
 }
-
 function loadFromFirebase() {
   if (TEST_MODE) {
     setTimeout(() => {
@@ -185,10 +241,18 @@ function loadFromFirebase() {
     return;
   }
 
+  // Safety check: if dataRef is missing (offline), switch to test mode behavior or warn
+  if (!dataRef) {
+      console.warn("No DB connection. Cannot load live data.");
+      return;
+  }
+
   dataRef.on("value", (snapshot) => {
     applyData(snapshot.val() || {});
   });
 }
+
+// ... applyData function remains the same ...
 
 function applyData(parsed) {
   // 1. Hide Loader
@@ -226,13 +290,17 @@ function saveState() {
     admins: state.admins,
     nextAdminId: state.nextAdminId
   };
+
   if (TEST_MODE) {
     localStorage.setItem("stallz_test_data", JSON.stringify(payload));
   } else {
-    dataRef.set(payload).catch((e) => console.error("Save failed:", e));
+    if (dataRef) {
+        dataRef.set(payload).catch((e) => console.error("Save failed:", e));
+    } else {
+        console.warn("Save failed: No database connection.");
+    }
   }
 }
-
 // ==========================================
 // 4. LOGIC & FORMATTERS
 // ==========================================
@@ -720,6 +788,9 @@ function saveNewLoan() {
   el("loanModal").classList.add("modal-hidden");
   wizardStep = 0; wizardDraft = {};
   refreshUI();
+
+  // ADDED THIS LINE:
+  showToast("Loan created successfully!", "success");
 }
 
 function openActionModal(action, loanId) {
@@ -735,7 +806,7 @@ function openActionModal(action, loanId) {
     el("actionModalTitle").textContent = "Record Payment";
     body.innerHTML = `
       <div class="field"><label>Amount</label><input type="number" id="actAmount" value="${Math.ceil(loan.balance)}"></div>
-      <div class="field"><label>Date</label><input type="date" id="actDate" value="${new Date().toISOString().split('T')[0]}"></div>
+      <div class="field"><label>Date</label><input type="date" id="actDate" value="${getLocalDateVal()}"></div>
     `;
   } else if (action === "NOTE") {
     el("actionModalTitle").textContent = "Edit Note";
@@ -825,13 +896,19 @@ function init() {
   });
 
   el("addCapitalBtn")?.addEventListener("click", () => {
-      const val = Number(el("addCapitalInput").value);
-      if (val > 0) {
-          state.capitalTxns.unshift({ id: generateCapitalTxnId(), amount: val, date: new Date().toISOString(), note: "Manual Add" });
-          el("addCapitalInput").value = "";
-          saveState(); refreshUI();
-          showToast("Capital added successfully!", "success");
+      const input = el("addCapitalInput");
+      const val = Number(input.value);
+
+      // FIX: Check for negative values
+      if (val <= 0) {
+          showToast("Enter a valid positive amount", "error");
+          return;
       }
+
+      state.capitalTxns.unshift({ id: generateCapitalTxnId(), amount: val, date: new Date().toISOString(), note: "Manual Add" });
+      input.value = "";
+      saveState(); refreshUI();
+      showToast("Capital added successfully!", "success");
   });
 
   // EXPORT EXCEL
