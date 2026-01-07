@@ -42,6 +42,19 @@ function getLocalDateVal() {
   return `${year}-${month}-${day}`;
 }
 
+// --- AUTO THEME ENGINE ---
+function checkTimeBasedTheme() {
+  const hour = new Date().getHours();
+  // Rule: Light Mode between 6 AM (06:00) and 6 PM (18:00)
+  const isDayTime = hour >= 6 && hour < 18;
+
+  if (isDayTime) {
+    document.documentElement.setAttribute("data-theme", "light");
+  } else {
+    document.documentElement.removeAttribute("data-theme"); // Default to Dark
+  }
+}
+
 // --- TOAST HELPER ---
 function showToast(message, type = "success") {
   const container = el("toast-container");
@@ -999,8 +1012,20 @@ function init() {
       el("searchInput").value = ""; el("statusFilter").value = "All"; renderLoansTable();
   });
 
-  // Init
+// ... existing listeners ...
+
+  // Filters
+  ["searchInput", "statusFilter", "planFilter"].forEach(id => el(id)?.addEventListener("input", renderLoansTable));
+  el("clearFiltersBtn")?.addEventListener("click", () => {
+      el("searchInput").value = ""; el("statusFilter").value = "All"; renderLoansTable();
+  });
+
+  // --- STARTUP LOGIC ---
+  checkTimeBasedTheme(); // 1. Run immediately on load
+  setInterval(checkTimeBasedTheme, 60000); // 2. Check again every minute (in case sun sets while app is open)
+
   setActiveView("main");
   showWelcomeScreen();
 }
+// Ensure this is the very last line of the file!
 document.addEventListener("DOMContentLoaded", init);

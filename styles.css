@@ -6,10 +6,62 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Deep Space Theme */
+  /* --- DEFAULT: DARK MODE (CYBER SPACE) --- */
   --bg-color: #020617;
   --bg-gradient: radial-gradient(circle at 50% -20%, #0f172a 0%, #020617 80%);
 
+  /* Glass Cards */
+  --card-bg: rgba(15, 23, 42, 0.75);
+  --card-border: 1px solid rgba(255, 255, 255, 0.08);
+  --glass-blur: blur(20px);
+  --card-glow: 0 0 40px rgba(59, 130, 246, 0.05);
+
+  /* Inputs */
+  --input-bg: rgba(0, 0, 0, 0.5);
+  --input-border: rgba(255, 255, 255, 0.15);
+
+  /* NEON BLUE COLORS */
+  --primary: #3b82f6;       /* Royal Blue */
+  --primary-dark: #1d4ed8;
+  --primary-glow: 0 0 20px rgba(59, 130, 246, 0.4);
+
+  --text-main: #ffffff;
+  --text-muted: #94a3b8;    /* Slate Grey */
+
+  --radius: 16px;
+}
+
+/* --- AUTOMATIC LIGHT MODE OVERRIDES (OUTSIDE :ROOT) --- */
+[data-theme="light"] {
+  --bg-color: #f1f5f9; /* Light Grey background */
+  --bg-gradient: none; /* Remove space gradient */
+
+  --card-bg: #ffffff;
+  --card-border: 1px solid #e2e8f0;
+  --card-glow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+  --input-bg: #f8fafc;
+  --input-border: #cbd5e1;
+  --text-main: #0f172a; /* Dark Navy Text */
+  --text-muted: #64748b; /* Slate Grey Text */
+
+  --primary: #2563eb;
+  --glass-blur: none; /* Crisp edges for day */
+}
+
+/* Fix input text color in light mode */
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+  color: #0f172a !important;
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Ensure the transition is smooth */
+body {
+  transition: background 0.5s ease, color 0.5s ease;
+}
   /* Glass Cards */
   --card-bg: rgba(15, 23, 42, 0.75);
   --card-border: 1px solid rgba(255, 255, 255, 0.08);
