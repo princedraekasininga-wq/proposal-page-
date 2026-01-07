@@ -566,29 +566,41 @@ tbody tr:hover {
   }
 }
 /* =========================================
-   13. STATUS INDICATOR (NEW)
+   13. STATUS INDICATOR (MICRO DOT)
    ========================================= */
 .status-indicator {
-  display: inline-flex; align-items: center; gap: 6px;
-  margin-left: 12px; padding: 4px 10px; border-radius: 20px;
-  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.05em;
-  border: 1px solid rgba(255,255,255,0.1);
-  transform: translateY(-2px); /* Align slightly up */
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 12px;
+  box-shadow: 0 0 10px currentColor;
+  position: relative;
+  top: -2px;
 }
 
-.status-dot { width: 6px; height: 6px; border-radius: 50%; }
+/* OFFLINE / TEST MODE (Subtle Red) */
+.status-indicator.offline {
+  background-color: #ef4444;
+  color: #ef4444; /* Used for shadow */
+  opacity: 0.5;
+}
 
-/* OFFLINE / TEST MODE STYLE */
-.status-indicator.offline { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #f87171; }
-.status-indicator.offline .status-dot { background: #f87171; box-shadow: 0 0 8px #f87171; }
+/* ONLINE (Glowing Green) */
+.status-indicator.online {
+  background-color: #22c55e;
+  color: #22c55e;
+  box-shadow: 0 0 15px #22c55e;
+  animation: pulseDot 2s infinite;
+}
 
-/* ONLINE STYLE */
-.status-indicator.online { background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3); color: #4ade80; }
-.status-indicator.online .status-dot { background: #4ade80; box-shadow: 0 0 8px #4ade80; animation: pulseGreen 2s infinite; }
+@keyframes pulseDot {
+  0% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 0.5; transform: scale(1); }
+}
 
-@keyframes pulseGreen { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
-
-/* Mobile Adjustment */
+/* Mobile Alignment */
 @media (max-width: 600px) {
-  .status-indicator { margin-left: 0; margin-top: 4px; display: flex; }
+  .status-indicator { margin-left: 8px; margin-top: 0; }
 }

@@ -457,20 +457,7 @@ function renderDashboard() {
     }
   }
 
-  // 3. Update Header Status Indicator (Online/Offline)
-  const statusPill = el("systemStatusPill");
-  const statusText = el("systemStatusText");
-  if (statusPill && statusText) {
-    if (TEST_MODE) {
-       statusPill.className = "status-indicator offline";
-       statusText.textContent = "TEST MODE";
-    } else {
-       statusPill.className = "status-indicator online";
-       statusText.textContent = "ONLINE";
-    }
-  }
-
-  // 4. Capital Tab Logic (Hidden/Shown based on setup)
+  // 3. Capital Tab Logic (Hidden/Shown based on setup)
   if (state.startingCapital > 0) {
       if(el("startingCapitalSetupRow")) el("startingCapitalSetupRow").style.display = "none";
       if(el("startingCapitalInfoRow")) {
@@ -492,7 +479,7 @@ function renderDashboard() {
      `).join("");
   }
 
-  // 5. Render Cards (Replaced System Card with Active Deals)
+  // 4. Render Cards
   container.innerHTML = `
     <div class="stat-card" style="border-color: var(--primary);">
       <div class="stat-label">Active Deals</div>
