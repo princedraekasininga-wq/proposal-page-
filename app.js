@@ -26,6 +26,7 @@ try {
 } catch (e) {
   console.error("Firebase Init Error (Ignore if offline):", e);
 }
+
 // ==========================================
 // 2. HELPER FUNCTIONS & CONSTANTS
 // ==========================================
@@ -60,7 +61,6 @@ function showToast(message, type = "success") {
     setTimeout(() => toast.remove(), 500);
   }, 3500);
 }
-
 
 // --- SESSION MANAGEMENT ---
 function updateSessionActivity() {
@@ -108,6 +108,7 @@ const state = {
   user: null,
   isLoggedIn: false
 };
+
 // --- FILTER STATE ---
 let activeFilters = { status: 'All', plan: 'All' };
 
@@ -190,7 +191,7 @@ function showWelcomeScreen() {
     }
   }
 
-  // 3. LOGIN BUTTON LOGIC (This was missing in your code!)
+  // 3. LOGIN BUTTON LOGIC
   if (loginBtn) {
     loginBtn.onclick = async () => {
       const email = el("loginEmail").value.trim();
@@ -228,6 +229,7 @@ function showWelcomeScreen() {
     };
   }
 }
+
 function loadFromFirebase() {
   if (TEST_MODE) {
     setTimeout(() => {
@@ -252,8 +254,6 @@ function loadFromFirebase() {
   });
 }
 
-// ... applyData function remains the same ...
-
 function applyData(parsed) {
   // 1. Hide Loader
   const loader = el("loadingOverlay");
@@ -276,6 +276,7 @@ function applyData(parsed) {
   state.nextAdminId = parsed.nextAdminId || 1;
   refreshUI();
 }
+
 function saveState() {
   if (!state.dataLoaded) return;
   const payload = {
@@ -301,6 +302,7 @@ function saveState() {
     }
   }
 }
+
 // ==========================================
 // 4. LOGIC & FORMATTERS
 // ==========================================
@@ -369,7 +371,7 @@ function generateRepaymentId() { return state.nextRepaymentId++; }
 function generateCapitalTxnId() { return state.nextCapitalTxnId++; }
 
 // ==========================================
-// 5. PRINT RECEIPTS (RESTORED)
+// 5. PRINT RECEIPTS
 // ==========================================
 
 function openReceipt(loanId) {
@@ -430,16 +432,21 @@ function renderDashboard() {
   if (!container) return;
 
   const loans = state.loans || [];
+
+  // 1. Calculate Stats
   const totalLoaned = loans.reduce((s, l) => s + (l.amount || 0), 0);
   const totalOutstanding = loans.reduce((s, l) => s + Math.max(0, l.balance || 0), 0);
   const totalProfit = loans.reduce((s, l) => s + (l.profitCollected || 0), 0);
+
+  // New Metric: Active Loans Count (People who currently owe money)
+  const activeCount = loans.filter(l => l.status === "ACTIVE" || l.status === "OVERDUE").length;
 
   const starting = state.startingCapital || 0;
   const added = (state.capitalTxns || []).reduce((s, t) => s + (t.amount || 0), 0);
   const paidIn = loans.reduce((s, l) => s + (l.paid || 0), 0);
   const cashOnHand = starting + added + paidIn - totalLoaned;
 
-  // --- LOGIC: RED IF NEGATIVE ---
+  // 2. Logic: Red Text if Cash is Negative
   const cashEl = el("cashOnHandValue");
   if(cashEl) {
     cashEl.textContent = formatMoney(cashOnHand);
@@ -450,7 +457,20 @@ function renderDashboard() {
     }
   }
 
-  // Capital Tab Logic
+  // 3. Update Header Status Indicator (Online/Offline)
+  const statusPill = el("systemStatusPill");
+  const statusText = el("systemStatusText");
+  if (statusPill && statusText) {
+    if (TEST_MODE) {
+       statusPill.className = "status-indicator offline";
+       statusText.textContent = "TEST MODE";
+    } else {
+       statusPill.className = "status-indicator online";
+       statusText.textContent = "ONLINE";
+    }
+  }
+
+  // 4. Capital Tab Logic (Hidden/Shown based on setup)
   if (state.startingCapital > 0) {
       if(el("startingCapitalSetupRow")) el("startingCapitalSetupRow").style.display = "none";
       if(el("startingCapitalInfoRow")) {
@@ -472,14 +492,12 @@ function renderDashboard() {
      `).join("");
   }
 
-  let displayRole = state.user && state.user.email === "test@admin.com" ? "Owner" : "Viewer";
-
-  // --- UPDATED CARDS WITH COLORS ---
+  // 5. Render Cards (Replaced System Card with Active Deals)
   container.innerHTML = `
     <div class="stat-card" style="border-color: var(--primary);">
-      <div class="stat-label">System</div>
-      <div class="stat-value" style="font-size: 0.9rem;">${TEST_MODE ? "TEST MODE" : "ONLINE"}</div>
-      <div class="stat-sub">${displayRole}</div>
+      <div class="stat-label">Active Deals</div>
+      <div class="stat-value" style="font-size: 1.8rem; color:white;">${activeCount}</div>
+      <div class="stat-sub">Clients owing money</div>
     </div>
 
     <div class="stat-card stat-purple">
