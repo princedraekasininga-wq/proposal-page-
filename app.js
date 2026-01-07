@@ -457,7 +457,7 @@ function renderDashboard() {
     }
   }
 
-  // 3. Capital Tab Logic (Hidden/Shown based on setup)
+  // 3. Capital Tab Logic
   if (state.startingCapital > 0) {
       if(el("startingCapitalSetupRow")) el("startingCapitalSetupRow").style.display = "none";
       if(el("startingCapitalInfoRow")) {
@@ -479,27 +479,30 @@ function renderDashboard() {
      `).join("");
   }
 
-  // 4. Render Cards
+  // 4. Render Cards (UPDATED WITH DESCRIPTIONS)
   container.innerHTML = `
     <div class="stat-card" style="border-color: var(--primary);">
       <div class="stat-label">Active Deals</div>
       <div class="stat-value" style="font-size: 1.8rem; color:white;">${activeCount}</div>
-      <div class="stat-sub">Clients owing money</div>
+      <div class="stat-sub">Clients with open balances</div>
     </div>
 
     <div class="stat-card stat-purple">
       <div class="stat-label">Total Loaned</div>
       <div class="stat-value" id="statLoaned">K0.00</div>
+      <div class="stat-sub">Lifetime capital deployed</div>
     </div>
 
     <div class="stat-card stat-orange">
       <div class="stat-label">Outstanding</div>
       <div class="stat-value" id="statOutstanding">K0.00</div>
+      <div class="stat-sub">Pending collection (Principal + Interest)</div>
     </div>
 
     <div class="stat-card stat-green">
       <div class="stat-label">Profit Made</div>
       <div class="stat-value" id="statProfit">K0.00</div>
+      <div class="stat-sub">Total realized gains collected</div>
     </div>
   `;
 
@@ -508,7 +511,6 @@ function renderDashboard() {
   animateValue(el("statOutstanding"), 0, totalOutstanding, 2000);
   animateValue(el("statProfit"), 0, totalProfit, 2500);
 }
-
 function renderLoansTable() {
 // Check for issues and show badge
   const overdueCount = (state.loans || []).filter(l => l.status === "OVERDUE").length;

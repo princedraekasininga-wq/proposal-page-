@@ -452,6 +452,15 @@ tbody tr:hover {
   background: linear-gradient(to right, #fff, #cbd5e1);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
+/* Add this under the .stat-value rule */
+.stat-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  font-weight: 500;
+  opacity: 0.8;
+  letter-spacing: 0.02em;
+}
 .stat-purple .stat-value { background: linear-gradient(to right, #e879f9, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .stat-orange .stat-value { background: linear-gradient(to right, #fbbf24, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .stat-green .stat-value { background: linear-gradient(to right, #4ade80, #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -556,7 +565,7 @@ tbody tr:hover {
     padding: 12px 16px; flex-direction: column; align-items: center; gap: 16px;
   }
   .header-brand h1 {
-    font-size: 2.2rem; justify-content: center; width: 100%; text-align: center;
+    font-size: 2.0rem; justify-content: center; width: 100%; text-align: center;
   }
   .hud-rates {
     width: 100%; justify-content: center; padding-bottom: 4px;
