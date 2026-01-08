@@ -216,17 +216,15 @@ function showWelcomeScreen() {
   const errorMsg = el("authError");
   const loader = el("loadingOverlay");
 
-  // Elements for toggling
   const regFields = el("registerFields");
   const authTitle = el("authTitle");
   const toggleText = el("authToggleText");
 
-  // State: Are we registering?
   let isRegisterMode = false;
 
-  // --- 1. SESSION CHECK (Auto-Login) ---
+  // --- 1. SESSION CHECK (Auto-Login with Persistence) ---
   const lastActive = localStorage.getItem("stallz_last_active");
-  const testSession = localStorage.getItem("stallz_test_session");
+  const savedProfile = localStorage.getItem("stallz_user_profile"); // <--- NEW: READ SAVED USER
   const now = Date.now();
   const THIRTY_MINUTES = 30 * 60 * 1000;
 
@@ -235,80 +233,67 @@ function showWelcomeScreen() {
     if (typeof firebase !== "undefined" && firebase.auth) firebase.auth().signOut();
     localStorage.removeItem("stallz_last_active");
     localStorage.removeItem("stallz_test_session");
+    // Note: We don't clear the profile here so they can easily log back in later
     if (loader) loader.style.display = "none";
     screen.style.display = "flex";
     return;
   }
 
-  // AUTO-RESUME LOGIC
-  if (TEST_MODE && testSession === "true") {
-       // Simulate Admin in Test Mode
-       state.user = { email: "test@admin.com", uid: "test-user-123", role: "admin" };
+  // AUTO-RESUME LOGIC (Fixes "Forgot who I was" issue)
+  if (TEST_MODE && savedProfile) {
+       // A. RESUME AS SAVED USER
+       console.log("Restoring saved offline profile...");
+       state.user = JSON.parse(savedProfile);
        state.isLoggedIn = true;
        updateSessionActivity();
+
        screen.style.display = "none";
        if (loader) { loader.style.display = "flex"; loader.style.opacity = "1"; }
        loadFromFirebase();
+
   } else if (typeof firebase !== "undefined" && firebase.auth) {
-      // REAL FIREBASE AUTH LISTENER
+      // B. REAL FIREBASE AUTH
       firebase.auth().onAuthStateChanged((user) => {
         if (user) {
-          // --- CRITICAL: FETCH USER ROLE FROM DB ---
-          if (db) {
+           if (db) {
              db.ref('users/' + user.uid).once('value').then((snap) => {
                  const profile = snap.val() || {};
-                 // Merge Auth User + DB Profile (Role, Phone, NRC)
                  state.user = { ...user, ...profile };
                  state.isLoggedIn = true;
-
                  updateSessionActivity();
                  screen.style.display = "none";
-
-                 // Show loader while fetching main data
                  if (loader) { loader.style.display = "flex"; loader.style.opacity = "1"; }
-                 loadFromFirebase();
-             }).catch(err => {
-                 console.error("Profile fetch error:", err);
-                 // Fallback if DB fails
-                 state.user = user;
-                 state.isLoggedIn = true;
-                 screen.style.display = "none";
                  loadFromFirebase();
              });
           } else {
-             // Fallback if DB not ready
              state.user = user;
              state.isLoggedIn = true;
              screen.style.display = "none";
              loadFromFirebase();
           }
         } else {
-          // No user found -> Show Login Screen
           if (loader) loader.style.display = "none";
           screen.style.display = "flex";
         }
       });
   } else {
-      // Default fallback
+      // Fallback
       if (loader) loader.style.display = "none";
       screen.style.display = "flex";
   }
 
-  // --- 2. TOGGLE MODE (Login <-> Register) ---
+  // --- 2. TOGGLE BUTTON ACTIONS ---
   if (toggleBtn) {
       toggleBtn.onclick = () => {
           isRegisterMode = !isRegisterMode;
-          errorMsg.textContent = ""; // Clear errors
-
+          errorMsg.textContent = "";
           if (isRegisterMode) {
-              // Switch to REGISTER view
               regFields.style.display = "block";
               actionBtn.textContent = "Create Account";
               authTitle.textContent = "Register a new profile";
               toggleText.textContent = "Already have an account?";
               toggleBtn.textContent = "Login";
           } else {
-              // Switch back to LOGIN view
               regFields.style.display = "none";
               actionBtn.textContent = "Login";
               authTitle.textContent = "Sign in with PIN";
@@ -318,45 +303,47 @@ function showWelcomeScreen() {
       };
   }
 
-  // --- 3. MAIN ACTION (Login OR Register) ---
+  // --- 3. LOGIN / REGISTER ACTION ---
   if (actionBtn) {
     actionBtn.onclick = async () => {
       const email = el("loginEmail").value.trim();
-      const password = el("loginPassword").value.trim(); // This is the PIN
+      const password = el("loginPassword").value.trim();
 
-      // Get Extra Fields if registering
       const name = isRegisterMode ? el("regName").value.trim() : "";
       const phone = isRegisterMode ? el("regPhone").value.trim() : "";
       const nrc = isRegisterMode ? el("regNRC").value.trim() : "";
 
-      if (!email || !password) {
-        showToast("Please enter email and PIN", "error");
-        return;
+      if (!email || !password) { showToast("Enter email & PIN", "error"); return; }
+
+      if (isRegisterMode && (!name || !phone || !nrc)) {
+          showToast("All fields required", "error"); return;
       }
 
-      if (isRegisterMode) {
-          if (!name || !phone || !nrc) {
-             showToast("All fields (Name, NRC, Phone) are required", "error");
-             return;
-          }
-      }
-
-      // SHOW LOADER
       if (loader) { loader.style.display = "flex"; loader.style.opacity = "1"; }
 
-      // --- A. TEST MODE HANDLING ---
+      // TEST MODE LOGIN
       if (TEST_MODE) {
         setTimeout(() => {
           localStorage.setItem("stallz_test_session", "true");
 
-          const role = isRegisterMode ? "client" : "admin";
+          // Determine Role
+          let role = "client";
+          if (email.includes("admin") || (!isRegisterMode && email === "test@admin.com")) role = "admin";
 
-          state.user = {
+          const userObj = {
               email: email,
               uid: "test-" + Date.now(),
               displayName: name || "Test User",
+              phone: phone, // Save Phone
+              nrc: nrc,     // Save NRC
+              name: name,
               role: role
           };
+
+          state.user = userObj;
+
+          // CRITICAL: SAVE USER PROFILE TO STORAGE
+          localStorage.setItem("stallz_user_profile", JSON.stringify(userObj));
 
           state.isLoggedIn = true;
           updateSessionActivity();
@@ -364,58 +351,41 @@ function showWelcomeScreen() {
           screen.style.display = "none";
           loadFromFirebase();
 
-          if (isRegisterMode) showToast("Account created (Test Mode)", "success");
+          showToast(isRegisterMode ? "Account created!" : "Welcome back!", "success");
         }, 1000);
         return;
       }
 
-      // --- B. REAL FIREBASE HANDLING ---
+      // REAL FIREBASE LOGIN
       try {
         if (typeof firebase === "undefined") throw new Error("Firebase not loaded");
 
         if (isRegisterMode) {
-            // 1. CREATE ACCOUNT (Email + PIN)
             const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
             const user = userCredential.user;
-
-            // 2. UPDATE PROFILE (Name)
             await user.updateProfile({ displayName: name });
 
-            // 3. SAVE FULL PROFILE TO DB (Including NRC)
             if (db) {
                 await db.ref('users/' + user.uid).set({
-                    name: name,
-                    email: email,
-                    phone: phone,
-                    nrc: nrc,  // <--- SAVING NRC HERE
-                    role: 'client', // Defaults to Client
-                    joinedAt: new Date().toISOString()
+                    name: name, email: email, phone: phone, nrc: nrc,
+                    role: 'client', joinedAt: new Date().toISOString()
                 });
             }
             showToast("Welcome to Stallz Loans!", "success");
         } else {
-            // LOGIN (Email + PIN)
             await firebase.auth().signInWithEmailAndPassword(email, password);
         }
-
         updateSessionActivity();
       } catch (error) {
         if (loader) loader.style.display = "none";
-
-        // Friendly Error Messages
         let msg = "Authentication failed.";
-        if (error.code === 'auth/email-already-in-use') msg = "That email is already registered.";
-        if (error.code === 'auth/weak-password') msg = "PIN must be at least 6 digits.";
-        if (error.code === 'auth/wrong-password') msg = "Invalid PIN or Email.";
-        if (error.code === 'auth/user-not-found') msg = "No account found.";
-
+        if (error.code === 'auth/wrong-password') msg = "Invalid PIN.";
         errorMsg.textContent = msg;
         showToast(msg, "error");
       }
     };
   }
 }
-
 
 function loadFromFirebase() {
   if (TEST_MODE) {
@@ -630,7 +600,7 @@ function refreshUI() {
   const clientView = el("view-client-portal");
   if (clientView) clientView.classList.add("view-hidden");
 }
-// --- UPDATED LOANS TABLE (With Receipt, WhatsApp & Write Off) ---
+// --- UPDATED LOANS TABLE (With Approval, Receipt, WhatsApp) ---
 function renderLoansTable() {
   const overdueCount = (state.loans || []).filter(l => l.status === "OVERDUE").length;
   const badge = el("clientBadge");
@@ -664,9 +634,11 @@ function renderLoansTable() {
     // Progress Logic
     const percent = Math.min(100, Math.round(((l.paid || 0) / (l.totalDue || 1)) * 100));
     let progressColor = "var(--primary)";
-    if (percent >= 100) progressColor = "#22c55e";
-    else if (l.status === "OVERDUE") progressColor = "#ef4444";
-    else if (l.status === "DEFAULTED") progressColor = "#64748b"; // Grey for bad debt
+
+    if (percent >= 100) progressColor = "#22c55e"; // Green
+    else if (l.status === "OVERDUE") progressColor = "#ef4444"; // Red
+    else if (l.status === "DEFAULTED") progressColor = "#64748b"; // Grey
+    else if (l.status === "PENDING") progressColor = "#f59e0b"; // Orange (Pending)
 
     const isOverdue = l.status === "OVERDUE";
     const balanceStyle = isOverdue ? 'class="text-danger-glow" style="font-weight:bold;"' : 'style="font-weight:bold;"';
@@ -710,11 +682,16 @@ function renderLoansTable() {
       </td>
 
       <td data-label="Start">${formatDate(l.startDate)}</td>
-      <td data-label="Due">${formatDate(l.dueDate)}</td>
+      <td data-label="Due">${l.status === 'PENDING' ? 'Pending' : formatDate(l.dueDate)}</td>
       <td data-label="Balance" ${balanceStyle}>${formatMoney(l.balance)}</td>
       <td data-label="Status"><span class="status-pill status-${(l.status||'active').toLowerCase()}">${l.status}</span></td>
 
       <td data-label="Actions" style="text-align:right; white-space:nowrap;">
+
+        ${l.status === "PENDING" ? `
+            <button class="btn-icon" onclick="approveLoan(${l.id})" title="Approve Request" style="color:#22c55e; border:1px solid #22c55e; border-radius:4px; padding:2px 6px; font-size:0.75rem; width:auto; margin-right:4px;">✔ Approve</button>
+        ` : ''}
+
         <button class="btn-icon" onclick="openReceipt(${l.id})" title="Print Receipt">🧾</button>
 
         <a href="${waLink}" target="_blank" class="btn-icon" style="${waStyle}; text-decoration:none; display:inline-block;" title="Send WhatsApp Reminder">💬</a>
@@ -728,6 +705,26 @@ function renderLoansTable() {
     </tr>
   `}).join("");
 }
+
+// --- NEW HELPER: APPROVE LOAN ---
+function approveLoan(id) {
+    if(!confirm("Approve this loan request? The timer will start now.")) return;
+
+    const loan = state.loans.find(l => l.id === id);
+    if (loan) {
+        loan.status = "ACTIVE";
+        loan.startDate = new Date().toISOString(); // Start timer now
+
+        // Recalculate due date based on plan
+        computeDerivedFields(loan);
+
+        saveState();
+        refreshUI();
+        showToast("Loan Approved & Active!", "success");
+    }
+}
+
+
 function renderRepaymentsTable() {
   const tbody = el("repaymentsTableBody");
   if (!tbody) return;

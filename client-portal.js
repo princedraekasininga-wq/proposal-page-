@@ -122,12 +122,12 @@ function renderClientPortal() {
   const btnRefresh = document.getElementById("cpRefreshBtn");
   if (btnRefresh) {
       btnRefresh.onclick = () => {
-          loadFromFirebase();
-          showToast("Refreshing...", "success");
+          if(typeof loadFromFirebase === "function") loadFromFirebase();
+          if(typeof showToast === "function") showToast("Refreshing...", "success");
       };
   }
 
-  // Request Loan Button (WhatsApp)
+  // Request Loan Button (Creates PENDING Loan + WhatsApp)
   const btnRequest = document.getElementById("cpRequestBtn");
   if (btnRequest) {
       btnRequest.onclick = () => {
@@ -137,11 +137,36 @@ function renderClientPortal() {
           const item = prompt("What are you offering as collateral? (e.g. Phone, Laptop)");
           if(!item) return;
 
-          const adminPhone = "260970000000"; // <--- CHANGE TO YOUR NUMBER
-          // Fixed Emojis for the message:
-          const text = `Hi, I am ${state.user.name}. I would like to request a loan.\n\n💰 Amount: K${amount}\n🎒 Collateral: ${item}\n\nPlease let me know if approved.`;
+          // 1. CREATE 'PENDING' LOAN OBJECT
+          const newRequest = {
+             id: Date.now(), // Unique ID
+             clientName: state.user.name || "Client",
+             clientPhone: state.user.phone || "",
+             amount: Number(amount),
+             collateralItem: item,
+             status: "PENDING", // <--- SPECIAL STATUS
+             startDate: new Date().toISOString(),
+             plan: "Weekly", // Default
+             balance: Number(amount), // Placeholder
+             totalDue: Number(amount) // Placeholder
+          };
 
+          // 2. SAVE TO DATABASE (Live or Test)
+          if(state.loans) state.loans.unshift(newRequest);
+
+          // Save using the function from app.js
+          if (typeof saveState === "function") {
+             saveState();
+          }
+
+          // 3. SEND WHATSAPP NOTIFICATION
+          const adminPhone = "260970000000"; // <--- CHANGE THIS TO YOUR NUMBER
+          const text = `Hi, I have requested a loan in the app.\n\n💰 Amount: K${amount}\n🎒 Collateral: ${item}`;
           window.open(`https://wa.me/${adminPhone}?text=${encodeURIComponent(text)}`, '_blank');
+
+          // 4. REFRESH UI
+          if (typeof showToast === "function") showToast("Request sent to Admin!", "success");
+          setTimeout(() => location.reload(), 1000);
       };
   }
 
@@ -155,11 +180,21 @@ function renderClientPortal() {
       };
   }
 
-  // Logout Button
+  // Logout Button (Fixes the Admin Loop)
   const btnLogout = document.getElementById("cpLogoutBtn");
   if (btnLogout) {
       btnLogout.onclick = () => {
-          if (typeof firebase !== "undefined") firebase.auth().signOut();
+          // 1. CLEAR SESSION DATA (Including Profile)
+          localStorage.removeItem("stallz_test_session");
+          localStorage.removeItem("stallz_last_active");
+          localStorage.removeItem("stallz_user_profile"); // <--- Prevents auto-login
+
+          // 2. Sign out of real Firebase
+          if (typeof firebase !== "undefined" && firebase.auth) {
+              firebase.auth().signOut();
+          }
+
+          // 3. Reload to Login Screen
           location.reload();
       };
   }
