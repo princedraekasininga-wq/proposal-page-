@@ -1,11 +1,13 @@
 // =========================================
-// CLIENT PORTAL LOGIC
+// CLIENT PORTAL LOGIC (v2 - Tiers & Requests)
 // =========================================
 
 function renderClientPortal() {
   console.log("Rendering Client Portal...");
 
-  // 1. Hide ALL Admin Elements
+  // ==========================================
+  // 1. HIDE ADMIN INTERFACE
+  // ==========================================
   const header = document.querySelector("header");
   const topNav = document.querySelector(".top-nav");
   const fab = document.querySelector("#fabAddBtn");
@@ -21,7 +23,10 @@ function renderClientPortal() {
   const view = document.getElementById("view-client-portal");
   if (view) view.classList.remove("view-hidden");
 
-  // 2. Filter Loans for this Client (Match by Phone)
+
+  // ==========================================
+  // 2. FETCH & FILTER DATA
+  // ==========================================
   // We sanitize phone numbers to ensure a match (remove spaces, +260)
   const myPhone = state.user.phone ? state.user.phone.replace(/\D/g, '') : "";
 
@@ -30,17 +35,60 @@ function renderClientPortal() {
       return loanPhone.includes(myPhone) || (myPhone && myPhone.includes(loanPhone));
   });
 
-  // 3. Calculate Totals
+  // Calculate Active Balance
   const activeLoan = myLoans.find(l => l.status === "ACTIVE" || l.status === "OVERDUE");
   const totalBalance = activeLoan ? activeLoan.balance : 0;
 
-  // 4. Update UI Elements
+
+  // ==========================================
+  // 3. TIER & TRUST SCORE LOGIC
+  // ==========================================
+  let score = 50; // Start with 50 points
+  const paidCount = myLoans.filter(l => l.status === "PAID").length;
+  const defaultCount = myLoans.filter(l => l.status === "DEFAULTED").length;
+
+  score += (paidCount * 10); // +10 points per paid loan
+  score -= (defaultCount * 50); // -50 points per default
+  if (activeLoan && activeLoan.status === "OVERDUE") score -= 20;
+
+  // Define Tiers (Fixed Emojis)
+  let tier = { name: "Bronze Member", class: "tier-bronze", icon: "🥉", limit: "K500" };
+  if (score >= 80) tier = { name: "Silver Member", class: "tier-silver", icon: "🥈", limit: "K2,000" };
+  if (score >= 150) tier = { name: "Gold Member", class: "tier-gold", icon: "🥇", limit: "K5,000" };
+  if (score >= 300) tier = { name: "Platinum VIP", class: "tier-platinum", icon: "💎", limit: "K10,000+" };
+
+
+  // ==========================================
+  // 4. UPDATE UI ELEMENTS
+  // ==========================================
+
+  // A. Greeting & Name
   const elName = document.getElementById("cpClientName");
   if(elName) elName.textContent = state.user.name || state.user.displayName || "Client";
 
+  // B. Balance Display
   const elBalance = document.getElementById("cpBalance");
   if(elBalance) elBalance.textContent = formatMoney(totalBalance);
 
+  // C. Render Tier Card
+  const tierContainer = document.getElementById("cpTierContainer");
+  if (tierContainer) {
+      tierContainer.innerHTML = `
+        <div class="cp-tier-card ${tier.class}">
+            <div class="cp-tier-icon">${tier.icon}</div>
+            <div class="cp-tier-info">
+                <h3>${tier.name}</h3>
+                <p>Trust Score: ${score}</p>
+            </div>
+            <div class="cp-tier-limit">
+                <span>Limit</span>
+                <strong>${tier.limit}</strong>
+            </div>
+        </div>
+      `;
+  }
+
+  // D. Due Date Badge
   const elDate = document.getElementById("cpDueDate");
   if (elDate) {
       if (activeLoan) {
@@ -52,7 +100,7 @@ function renderClientPortal() {
       }
   }
 
-  // 5. Render History Table
+  // E. Render History Table
   const tbody = document.getElementById("cpHistoryBody");
   if (tbody) {
       tbody.innerHTML = myLoans.map(l => `
@@ -65,27 +113,49 @@ function renderClientPortal() {
       `).join("");
   }
 
-  // 6. Attach Button Actions
-  // Refresh
+
+  // ==========================================
+  // 5. BUTTON ACTIONS
+  // ==========================================
+
+  // Refresh Button
   const btnRefresh = document.getElementById("cpRefreshBtn");
   if (btnRefresh) {
       btnRefresh.onclick = () => {
-          loadFromFirebase(); // Calls function from app.js
-          showToast("Refreshing data...", "success");
+          loadFromFirebase();
+          showToast("Refreshing...", "success");
       };
   }
 
-  // Pay (WhatsApp)
+  // Request Loan Button (WhatsApp)
+  const btnRequest = document.getElementById("cpRequestBtn");
+  if (btnRequest) {
+      btnRequest.onclick = () => {
+          const amount = prompt("How much do you want to borrow? (e.g. 500)");
+          if(!amount) return;
+
+          const item = prompt("What are you offering as collateral? (e.g. Phone, Laptop)");
+          if(!item) return;
+
+          const adminPhone = "260970000000"; // <--- CHANGE TO YOUR NUMBER
+          // Fixed Emojis for the message:
+          const text = `Hi, I am ${state.user.name}. I would like to request a loan.\n\n💰 Amount: K${amount}\n🎒 Collateral: ${item}\n\nPlease let me know if approved.`;
+
+          window.open(`https://wa.me/${adminPhone}?text=${encodeURIComponent(text)}`, '_blank');
+      };
+  }
+
+  // Pay Button (WhatsApp)
   const btnPay = document.getElementById("cpPayBtn");
   if (btnPay) {
       btnPay.onclick = () => {
-          const adminPhone = "260970000000"; // <--- CHANGE THIS TO YOUR NUMBER
+          const adminPhone = "260970000000"; // <--- CHANGE TO YOUR NUMBER
           const msg = `Hi, I want to pay my balance of ${formatMoney(totalBalance)}.`;
           window.open(`https://wa.me/${adminPhone}?text=${encodeURIComponent(msg)}`, '_blank');
       };
   }
 
-  // Logout
+  // Logout Button
   const btnLogout = document.getElementById("cpLogoutBtn");
   if (btnLogout) {
       btnLogout.onclick = () => {

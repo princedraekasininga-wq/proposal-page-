@@ -286,6 +286,8 @@
             <div class="cp-greeting">Welcome back,</div>
             <h1 id="cpClientName" class="cp-client-name">Client</h1>
 
+            <div id="cpTierContainer"></div>
+
             <div class="cp-balance-card">
                <div class="cp-shine"></div>
                <div class="cp-label">Current Balance</div>
@@ -293,10 +295,15 @@
                <div id="cpDueDate" class="cp-due-badge">No active loans</div>
             </div>
 
-            <div class="cp-actions">
+            <div class="cp-actions" style="flex-wrap: wrap;">
                <button id="cpRefreshBtn" class="btn-secondary cp-btn-refresh">
-                  🔄 Refresh
+                  🔄
                </button>
+
+               <button id="cpRequestBtn" class="btn cp-btn-request">
+                  ✋ Request Loan
+               </button>
+
                <button id="cpPayBtn" class="btn cp-btn-pay">
                   Pay Now 💳
                </button>

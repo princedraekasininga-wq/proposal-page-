@@ -103,3 +103,70 @@
     cursor: pointer;
     font-size: 0.9rem;
 }
+
+/* =========================================
+   NEW: TRUST & RELATIONSHIP CARDS
+   ========================================= */
+
+/* The Tier Card (Gold, Silver, Platinum look) */
+.cp-tier-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+}
+
+.cp-tier-icon {
+    font-size: 2.5rem;
+    background: rgba(0,0,0,0.2);
+    width: 60px; height: 60px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    margin-right: 16px;
+    flex-shrink: 0;
+}
+
+.cp-tier-info h3 { margin: 0; font-size: 1.1rem; color: white; font-weight: 700; }
+.cp-tier-info p { margin: 4px 0 0; font-size: 0.8rem; color: var(--text-muted); opacity: 0.9; }
+
+.cp-tier-limit {
+    text-align: right;
+    min-width: 80px;
+}
+.cp-tier-limit span { display: block; font-size: 0.65rem; text-transform: uppercase; opacity: 0.8; letter-spacing: 0.5px; }
+.cp-tier-limit strong { font-size: 1.1rem; font-weight: 800; }
+
+/* Tier Themes */
+/* 1. Bronze (New) */
+.tier-bronze { background: linear-gradient(135deg, #443730, #2b211e); border-color: #78350f; }
+.tier-bronze .cp-tier-icon { background: #78350f; color: #fcd34d; }
+.tier-bronze strong { color: #fdba74; }
+
+/* 2. Silver (Good) */
+.tier-silver { background: linear-gradient(135deg, #475569, #1e293b); border-color: #94a3b8; }
+.tier-silver .cp-tier-icon { background: #94a3b8; color: #fff; }
+.tier-silver strong { color: #e2e8f0; }
+
+/* 3. Gold (Great) */
+.tier-gold { background: linear-gradient(135deg, #eab308, #854d0e); border-color: #facc15; }
+.tier-gold .cp-tier-icon { background: #fef08a; color: #b45309; }
+.tier-gold strong { color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+
+/* 4. Platinum (VIP) */
+.tier-platinum { background: linear-gradient(135deg, #3b82f6, #1e3a8a); border-color: #60a5fa; }
+.tier-platinum .cp-tier-icon { background: #dbeafe; color: #1e40af; }
+.tier-platinum strong { color: #fff; }
+
+/* Request Button */
+.cp-btn-request {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+}
