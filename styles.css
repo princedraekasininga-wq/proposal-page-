@@ -282,37 +282,69 @@ header {
 }
 
 /* =========================================
-   5. INPUTS & FILTERS
+   5. UNIVERSAL INPUTS (Mobile Optimized)
    ========================================= */
-.filters-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 20px; }
-.filters-row .field { margin-bottom: 0; flex: 1; min-width: 120px; }
-
 input, select, textarea {
+  /* 1. Reset Native Browser Styles */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  /* 2. Mobile Sizing (Critical) */
   width: 100%;
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  color: white !important;
-  padding: 14px; border-radius: 10px;
-  font-size: 1rem; font-family: 'Inter', sans-serif;
-  outline: none; transition: all 0.3s ease; -webkit-appearance: none;
+  padding: 16px;
+  font-size: 16px; /* Prevents iOS auto-zoom */
+  font-family: 'Inter', sans-serif;
+  border-radius: 12px;
+  line-height: 1.3;
+  margin-bottom: 16px;
+
+  /* 3. SOLID High-Contrast Colors (No Transparency) */
+  background: #1e293b !important; /* Solid Slate Blue */
+  border: 1px solid #475569 !important; /* Visible Grey Border */
+  color: #ffffff !important; /* Pure White Text */
+
+  /* 4. Remove default outlines */
+  outline: none;
+  box-shadow: none;
 }
 
+/* Placeholder Text (e.g. "Email Address") */
+input::placeholder, textarea::placeholder {
+  color: #94a3b8 !important; /* Readable Light Grey */
+  opacity: 1;
+}
+
+/* Focus State (When typing) */
+input:focus, select:focus, textarea:focus {
+  border-color: #3b82f6 !important; /* Bright Blue Border */
+  background: #0f172a !important; /* Slightly darker background */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important; /* Blue Glow Ring */
+  transform: translateY(-1px);
+}
+
+/* Dropdown Arrow Fix */
 select {
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; padding-right: 2.5rem;
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.2em;
+  padding-right: 2.5rem;
 }
 
-input:focus, select:focus, textarea:focus {
-  background: rgba(15, 23, 42, 0.8) !important;
-  border-color: var(--primary) !important;
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3) !important;
-  transform: translateY(-2px);
+/* AUTOFILL FIX (Fixes the white background issue on saved passwords) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #1e293b inset !important;
+    -webkit-text-fill-color: #ffffff !important;
+    caret-color: white;
+    transition: background-color 5000s ease-in-out 0s;
 }
 
-.field label {
-  display: block; font-size: 0.85rem; color: var(--text-muted);
-  margin-bottom: 8px; font-weight: 500;
-}
+/* Filter Row Fix (Keep search bar inline) */
+.filters-row .field input { margin-bottom: 0; }
 
 /* =========================================
    6. TABLES & CARDS (Adaptive)
