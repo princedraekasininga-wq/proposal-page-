@@ -634,3 +634,40 @@ tbody tr:hover {
     justify-content: center;
     padding-bottom: 4px;
   }
+
+  /* =========================================
+   LOGIN VISIBILITY FIXES
+   ========================================= */
+
+/* 1. Make the inputs stand out more on the black screen */
+.welcome-input {
+  background: rgba(255, 255, 255, 0.15) !important; /* Brighter Grey */
+  border: 1px solid rgba(255, 255, 255, 0.3) !important; /* Clearer Border */
+  color: #ffffff !important; /* Force White Text */
+  font-weight: 600; /* Thicker text */
+}
+
+/* 2. Make the placeholder text (e.g., "Email Address") easier to read */
+.welcome-input::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* 3. Highlight when you click inside */
+.welcome-input:focus {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.5) !important;
+}
+
+/* 4. CRITICAL FIX: Browser Autofill (Saved Passwords)
+   This forces the browser to use a Dark Background even when autofilling */
+.welcome-input:-webkit-autofill,
+.welcome-input:-webkit-autofill:hover,
+.welcome-input:-webkit-autofill:focus,
+.welcome-input:-webkit-autofill:active {
+    /* Forces the background to be dark slate blue */
+    -webkit-box-shadow: 0 0 0 30px #1e293b inset !important;
+    /* Forces the text to be white */
+    -webkit-text-fill-color: #ffffff !important;
+    caret-color: white;
+}
