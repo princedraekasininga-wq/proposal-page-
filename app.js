@@ -5,7 +5,7 @@
 // --- SETTINGS ---
 // Set to TRUE for testing offline/local only.
 // Set to FALSE for GitHub/Production to use the live database.
-const TEST_MODE = false;
+const TEST_MODE = true;
 
 const firebaseConfig = {
   apiKey: "AIzaSyBRMITHX8gm0jKpEXuC4iePGWoYON85BDU",
