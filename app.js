@@ -5,7 +5,7 @@
 // --- SETTINGS ---
 // Set to TRUE for testing offline/local only.
 // Set to FALSE for GitHub/Production to use the live database.
-const TEST_MODE = true;
+const TEST_MODE = false;
 
 const firebaseConfig = {
   apiKey: "AIzaSyBRMITHX8gm0jKpEXuC4iePGWoYON85BDU",
@@ -182,36 +182,67 @@ function showWelcomeScreen() {
   const errorMsg = el("authError");
   const loader = el("loadingOverlay");
 
-  if (loader) loader.style.display = "none";
-
+  // --- 1. CHECK FOR SESSIONS (Real or Test) ---
   const lastActive = localStorage.getItem("stallz_last_active");
+  const testSession = localStorage.getItem("stallz_test_session"); // <--- NEW: Checks for test login
   const now = Date.now();
   const THIRTY_MINUTES = 30 * 60 * 1000;
 
+  // Session Timeout Logic
   if (lastActive && (now - lastActive > THIRTY_MINUTES)) {
     console.log("Session expired. Logging out.");
     if (typeof firebase !== "undefined" && firebase.auth) firebase.auth().signOut();
     localStorage.removeItem("stallz_last_active");
+    localStorage.removeItem("stallz_test_session"); // Clear test session too
+
+    if (loader) loader.style.display = "none";
     screen.style.display = "flex";
-  } else {
-    if (typeof firebase !== "undefined" && firebase.auth) {
+    return;
+  }
+
+  // --- 2. AUTO-LOGIN LOGIC ---
+  if (TEST_MODE) {
+    // If we are in Test Mode AND have a saved test session...
+    if (testSession === "true") {
+       console.log("TEST MODE: Auto-logging in from saved session...");
+       state.user = { email: "test@admin.com", uid: "test-user-123" };
+       state.isLoggedIn = true;
+       updateSessionActivity();
+
+       // Hide login immediately, show loader while data loads
+       screen.style.display = "none";
+       if (loader) loader.style.display = "flex";
+
+       loadFromFirebase();
+    } else {
+       // No saved session? Show login screen
+       if (loader) loader.style.display = "none";
+       screen.style.display = "flex";
+    }
+  }
+  // Real Firebase Logic (Unchanged)
+  else if (typeof firebase !== "undefined" && firebase.auth) {
       firebase.auth().onAuthStateChanged((user) => {
         if (user) {
           updateSessionActivity();
           state.user = user;
           state.isLoggedIn = true;
-          if (loader) { loader.style.display = "flex"; loader.style.opacity = "1"; }
           screen.style.display = "none";
+          // Keep loader visible until data loads (handled inside loadFromFirebase)
+          if (loader) { loader.style.display = "flex"; loader.style.opacity = "1"; }
           loadFromFirebase();
         } else {
+          if (loader) loader.style.display = "none";
           screen.style.display = "flex";
         }
       });
-    } else if (TEST_MODE) {
-        screen.style.display = "flex";
-    }
+  } else {
+      // Fallback if firebase is missing
+      if (loader) loader.style.display = "none";
+      screen.style.display = "flex";
   }
 
+  // --- 3. LOGIN BUTTON LOGIC ---
   if (loginBtn) {
     loginBtn.onclick = async () => {
       const email = el("loginEmail").value.trim();
@@ -224,17 +255,20 @@ function showWelcomeScreen() {
       if (loader) { loader.style.display = "flex"; loader.style.opacity = "1"; }
 
       if (TEST_MODE) {
-        console.log("TEST MODE: Bypassing Firebase Auth");
         setTimeout(() => {
+          // SAVE THE FAKE SESSION SO IT REMEMBERS YOU ON REFRESH
+          localStorage.setItem("stallz_test_session", "true");
+
           state.user = { email: email || "test@admin.com", uid: "test-user-123" };
           state.isLoggedIn = true;
           updateSessionActivity();
           screen.style.display = "none";
           loadFromFirebase();
-        }, 1000);
+        }, 500);
         return;
       }
 
+      // Real Auth
       try {
         if (typeof firebase === "undefined") throw new Error("Firebase not loaded");
         await firebase.auth().signInWithEmailAndPassword(email, password);
