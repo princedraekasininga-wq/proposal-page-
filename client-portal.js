@@ -1,22 +1,27 @@
 // =========================================
-// CLIENT PORTAL LOGIC (v2 - Tiers & Requests)
+// CLIENT PORTAL LOGIC (v2.0 - Calculator & Fixes)
 // =========================================
 
 function renderClientPortal() {
   console.log("Rendering Client Portal...");
 
   // ==========================================
-  // 1. HIDE ADMIN INTERFACE
+  // 1. MANAGE UI ELEMENTS (Show Header, Hide Admin Nav)
   // ==========================================
   const header = document.querySelector("header");
   const topNav = document.querySelector(".top-nav");
   const fab = document.querySelector("#fabAddBtn");
+  const adminLogout = document.getElementById("adminLogoutBtn");
 
-  if (header) header.style.display = "none";
+  // SHOW HEADER (Logo + Rates)
+  if (header) header.style.display = "flex";
+
+  // HIDE ADMIN CONTROLS
   if (topNav) topNav.style.display = "none";
   if (fab) fab.style.display = "none";
+  if (adminLogout) adminLogout.style.display = "none"; // Hide Admin Logout
 
-  // Hide all other views
+  // Hide all Admin Views
   document.querySelectorAll("[id^='view-']").forEach(v => v.classList.add("view-hidden"));
 
   // Show Client View
@@ -27,7 +32,6 @@ function renderClientPortal() {
   // ==========================================
   // 2. FETCH & FILTER DATA
   // ==========================================
-  // We sanitize phone numbers to ensure a match (remove spaces, +260)
   const myPhone = state.user.phone ? state.user.phone.replace(/\D/g, '') : "";
 
   const myLoans = state.loans.filter(l => {
@@ -51,7 +55,6 @@ function renderClientPortal() {
   score -= (defaultCount * 50); // -50 points per default
   if (activeLoan && activeLoan.status === "OVERDUE") score -= 20;
 
-  // Define Tiers (Fixed Emojis)
   let tier = { name: "Bronze Member", class: "tier-bronze", icon: "🥉", limit: "K500" };
   if (score >= 80) tier = { name: "Silver Member", class: "tier-silver", icon: "🥈", limit: "K2,000" };
   if (score >= 150) tier = { name: "Gold Member", class: "tier-gold", icon: "🥇", limit: "K5,000" };
@@ -62,15 +65,13 @@ function renderClientPortal() {
   // 4. UPDATE UI ELEMENTS
   // ==========================================
 
-  // A. Greeting & Name
   const elName = document.getElementById("cpClientName");
   if(elName) elName.textContent = state.user.name || state.user.displayName || "Client";
 
-  // B. Balance Display
   const elBalance = document.getElementById("cpBalance");
   if(elBalance) elBalance.textContent = formatMoney(totalBalance);
 
-  // C. Render Tier Card
+  // Render Tier Card
   const tierContainer = document.getElementById("cpTierContainer");
   if (tierContainer) {
       tierContainer.innerHTML = `
@@ -88,7 +89,6 @@ function renderClientPortal() {
       `;
   }
 
-  // D. Due Date Badge
   const elDate = document.getElementById("cpDueDate");
   if (elDate) {
       if (activeLoan) {
@@ -100,7 +100,7 @@ function renderClientPortal() {
       }
   }
 
-  // E. Render History Table
+  // Render History Table
   const tbody = document.getElementById("cpHistoryBody");
   if (tbody) {
       tbody.innerHTML = myLoans.map(l => `
@@ -115,8 +115,29 @@ function renderClientPortal() {
 
 
   // ==========================================
-  // 5. BUTTON ACTIONS
+  // 5. BUTTON ACTIONS & TOOLS
   // ==========================================
+
+  // --- LOAN CALCULATOR LOGIC (NEW) ---
+  const calcAmount = document.getElementById("calcAmount");
+  const calcPlan = document.getElementById("calcPlan");
+  const calcResult = document.getElementById("calcResult");
+
+  const updateCalc = () => {
+      const val = parseFloat(calcAmount.value) || 0;
+      let rate = 0.20; // Default Weekly
+      if (calcPlan.value === "2 Weeks") rate = 0.30;
+      if (calcPlan.value === "3 Weeks") rate = 0.35;
+      if (calcPlan.value === "Monthly") rate = 0.40;
+
+      const total = val * (1 + rate);
+      if(calcResult) calcResult.textContent = formatMoney(total);
+  };
+
+  if (calcAmount && calcPlan) {
+      calcAmount.oninput = updateCalc;
+      calcPlan.onchange = updateCalc;
+  }
 
   // Refresh Button
   const btnRefresh = document.getElementById("cpRefreshBtn");
@@ -137,64 +158,52 @@ function renderClientPortal() {
           const item = prompt("What are you offering as collateral? (e.g. Phone, Laptop)");
           if(!item) return;
 
-          // 1. CREATE 'PENDING' LOAN OBJECT
+          // 1. Create Pending Loan
           const newRequest = {
-             id: Date.now(), // Unique ID
+             id: Date.now(),
              clientName: state.user.name || "Client",
              clientPhone: state.user.phone || "",
              amount: Number(amount),
              collateralItem: item,
-             status: "PENDING", // <--- SPECIAL STATUS
+             status: "PENDING",
              startDate: new Date().toISOString(),
-             plan: "Weekly", // Default
-             balance: Number(amount), // Placeholder
-             totalDue: Number(amount) // Placeholder
+             plan: "Weekly",
+             balance: Number(amount),
+             totalDue: Number(amount)
           };
 
-          // 2. SAVE TO DATABASE (Live or Test)
+          // 2. Save
           if(state.loans) state.loans.unshift(newRequest);
+          if (typeof saveState === "function") saveState();
 
-          // Save using the function from app.js
-          if (typeof saveState === "function") {
-             saveState();
-          }
-
-          // 3. SEND WHATSAPP NOTIFICATION
-          const adminPhone = "260970000000"; // <--- CHANGE THIS TO YOUR NUMBER
+          // 3. WhatsApp
+          const adminPhone = "260970000000"; // <--- UPDATE YOUR NUMBER
           const text = `Hi, I have requested a loan in the app.\n\n💰 Amount: K${amount}\n🎒 Collateral: ${item}`;
           window.open(`https://wa.me/${adminPhone}?text=${encodeURIComponent(text)}`, '_blank');
 
-          // 4. REFRESH UI
-          if (typeof showToast === "function") showToast("Request sent to Admin!", "success");
+          if (typeof showToast === "function") showToast("Request sent!", "success");
           setTimeout(() => location.reload(), 1000);
       };
   }
 
-  // Pay Button (WhatsApp)
   const btnPay = document.getElementById("cpPayBtn");
   if (btnPay) {
       btnPay.onclick = () => {
-          const adminPhone = "260970000000"; // <--- CHANGE TO YOUR NUMBER
+          const adminPhone = "260970000000"; // <--- UPDATE YOUR NUMBER
           const msg = `Hi, I want to pay my balance of ${formatMoney(totalBalance)}.`;
           window.open(`https://wa.me/${adminPhone}?text=${encodeURIComponent(msg)}`, '_blank');
       };
   }
 
-  // Logout Button (Fixes the Admin Loop)
+  // Logout Button (Stops Auto-Login Loop)
   const btnLogout = document.getElementById("cpLogoutBtn");
   if (btnLogout) {
       btnLogout.onclick = () => {
-          // 1. CLEAR SESSION DATA (Including Profile)
           localStorage.removeItem("stallz_test_session");
           localStorage.removeItem("stallz_last_active");
-          localStorage.removeItem("stallz_user_profile"); // <--- Prevents auto-login
+          localStorage.removeItem("stallz_user_profile"); // <--- CRITICAL FIX
 
-          // 2. Sign out of real Firebase
-          if (typeof firebase !== "undefined" && firebase.auth) {
-              firebase.auth().signOut();
-          }
-
-          // 3. Reload to Login Screen
+          if (typeof firebase !== "undefined" && firebase.auth) firebase.auth().signOut();
           location.reload();
       };
   }

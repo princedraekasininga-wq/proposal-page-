@@ -1,8 +1,7 @@
 // ==========================================
 // APP VERSION CONTROL
 // ==========================================
-const APP_VERSION = "1.6"; // <--- Update this to match your HTML
-
+const APP_VERSION = "1.6"; // <--- Matches HTML
 
 // ==========================================
 // 1. FIREBASE CONFIGURATION & SETUP
@@ -61,16 +60,34 @@ function getLocalDateVal() {
   return `${year}-${month}-${day}`;
 }
 
-// --- AUTO THEME ENGINE ---
-function checkTimeBasedTheme() {
-  const hour = new Date().getHours();
-  // Rule: Light Mode between 6 AM (06:00) and 6 PM (18:00)
-  const isDayTime = hour >= 6 && hour < 18;
+// --- NEW: SMART THEME ENGINE (Day/Night Toggle) ---
+function initTheme() {
+  const savedTheme = localStorage.getItem("stallz_theme");
+  const btn = document.getElementById("themeToggleBtn");
 
-  if (isDayTime) {
-    document.documentElement.setAttribute("data-theme", "light");
+  // 1. Load Saved Theme or Default to Time
+  if (savedTheme) {
+      document.documentElement.setAttribute("data-theme", savedTheme);
   } else {
-    document.documentElement.removeAttribute("data-theme");
+      const hour = new Date().getHours();
+      const isDay = hour >= 6 && hour < 18;
+      if (isDay) document.documentElement.setAttribute("data-theme", "light");
+  }
+
+  // 2. Toggle Listener
+  if (btn) {
+      btn.onclick = () => {
+          const current = document.documentElement.getAttribute("data-theme");
+          const newTheme = current === "light" ? "dark" : "light";
+
+          if (newTheme === "light") {
+              document.documentElement.setAttribute("data-theme", "light");
+          } else {
+              document.documentElement.removeAttribute("data-theme");
+          }
+          localStorage.setItem("stallz_theme", newTheme);
+          vibrate([10]); // Haptic feedback
+      };
   }
 }
 
@@ -94,16 +111,15 @@ function showToast(message, type = "success") {
 
   container.appendChild(toast);
 
-  // Vibration logic
   if (type === "success") vibrate([20]);
   if (type === "error") vibrate([30, 30]);
 
-  // Remove faster (2.5 seconds) for a snappy feel
   setTimeout(() => {
     toast.style.animation = "toastFadeOut 0.4s forwards";
     setTimeout(() => toast.remove(), 400);
   }, 2500);
 }
+
 // --- SESSION MANAGEMENT ---
 function updateSessionActivity() {
   localStorage.setItem("stallz_last_active", Date.now());
@@ -114,23 +130,17 @@ document.addEventListener("touchstart", updateSessionActivity);
 
 function checkAppVersion() {
   const storedVersion = localStorage.getItem("stallz_app_version");
-
-  // Display Version in the UI (e.g., on the Welcome Screen)
   const subtitle = document.querySelector(".welcome-subtitle");
   if (subtitle) {
       subtitle.textContent = `Secure Admin Login (v${APP_VERSION})`;
   }
 
-  // Check for Update
   if (storedVersion !== APP_VERSION) {
-    // New version detected!
     localStorage.setItem("stallz_app_version", APP_VERSION);
-
-    // Show a special update toast
     setTimeout(() => {
         showToast(`App Updated to v${APP_VERSION}`, "success");
-        vibrate([50, 50, 50]); // Distinct vibration pattern
-    }, 1500); // Wait for the "Connecting" screen to finish
+        vibrate([50, 50, 50]);
+    }, 1500);
   }
 }
 
@@ -222,9 +232,9 @@ function showWelcomeScreen() {
 
   let isRegisterMode = false;
 
-  // --- 1. SESSION CHECK (Auto-Login with Persistence) ---
+  // --- 1. AUTO-LOGIN CHECK ---
   const lastActive = localStorage.getItem("stallz_last_active");
-  const savedProfile = localStorage.getItem("stallz_user_profile"); // <--- NEW: READ SAVED USER
+  const savedProfile = localStorage.getItem("stallz_user_profile");
   const now = Date.now();
   const THIRTY_MINUTES = 30 * 60 * 1000;
 
@@ -233,15 +243,14 @@ function showWelcomeScreen() {
     if (typeof firebase !== "undefined" && firebase.auth) firebase.auth().signOut();
     localStorage.removeItem("stallz_last_active");
     localStorage.removeItem("stallz_test_session");
-    // Note: We don't clear the profile here so they can easily log back in later
+    // NOTE: We don't clear profile here so they can login faster
     if (loader) loader.style.display = "none";
     screen.style.display = "flex";
     return;
   }
 
-  // AUTO-RESUME LOGIC (Fixes "Forgot who I was" issue)
+  // A. RESTORE SAVED USER (Offline/Test Mode)
   if (TEST_MODE && savedProfile) {
-       // A. RESUME AS SAVED USER
        console.log("Restoring saved offline profile...");
        state.user = JSON.parse(savedProfile);
        state.isLoggedIn = true;
@@ -251,8 +260,9 @@ function showWelcomeScreen() {
        if (loader) { loader.style.display = "flex"; loader.style.opacity = "1"; }
        loadFromFirebase();
 
-  } else if (typeof firebase !== "undefined" && firebase.auth) {
-      // B. REAL FIREBASE AUTH
+  }
+  // B. REAL FIREBASE AUTH
+  else if (typeof firebase !== "undefined" && firebase.auth) {
       firebase.auth().onAuthStateChanged((user) => {
         if (user) {
            if (db) {
@@ -265,11 +275,6 @@ function showWelcomeScreen() {
                  if (loader) { loader.style.display = "flex"; loader.style.opacity = "1"; }
                  loadFromFirebase();
              });
-          } else {
-             state.user = user;
-             state.isLoggedIn = true;
-             screen.style.display = "none";
-             loadFromFirebase();
           }
         } else {
           if (loader) loader.style.display = "none";
@@ -277,12 +282,11 @@ function showWelcomeScreen() {
         }
       });
   } else {
-      // Fallback
       if (loader) loader.style.display = "none";
       screen.style.display = "flex";
   }
 
-  // --- 2. TOGGLE BUTTON ACTIONS ---
+  // --- 2. TOGGLE BUTTONS ---
   if (toggleBtn) {
       toggleBtn.onclick = () => {
           isRegisterMode = !isRegisterMode;
@@ -314,19 +318,15 @@ function showWelcomeScreen() {
       const nrc = isRegisterMode ? el("regNRC").value.trim() : "";
 
       if (!email || !password) { showToast("Enter email & PIN", "error"); return; }
-
-      if (isRegisterMode && (!name || !phone || !nrc)) {
-          showToast("All fields required", "error"); return;
-      }
+      if (isRegisterMode && (!name || !phone || !nrc)) { showToast("All fields required", "error"); return; }
 
       if (loader) { loader.style.display = "flex"; loader.style.opacity = "1"; }
 
-      // TEST MODE LOGIN
+      // TEST MODE LOGIC
       if (TEST_MODE) {
         setTimeout(() => {
           localStorage.setItem("stallz_test_session", "true");
 
-          // Determine Role
           let role = "client";
           if (email.includes("admin") || (!isRegisterMode && email === "test@admin.com")) role = "admin";
 
@@ -334,20 +334,19 @@ function showWelcomeScreen() {
               email: email,
               uid: "test-" + Date.now(),
               displayName: name || "Test User",
-              phone: phone, // Save Phone
-              nrc: nrc,     // Save NRC
+              phone: phone,
+              nrc: nrc,
               name: name,
               role: role
           };
 
           state.user = userObj;
 
-          // CRITICAL: SAVE USER PROFILE TO STORAGE
+          // CRITICAL: SAVE USER PROFILE PERMANENTLY
           localStorage.setItem("stallz_user_profile", JSON.stringify(userObj));
 
           state.isLoggedIn = true;
           updateSessionActivity();
-
           screen.style.display = "none";
           loadFromFirebase();
 
@@ -356,32 +355,24 @@ function showWelcomeScreen() {
         return;
       }
 
-      // REAL FIREBASE LOGIN
+      // FIREBASE LOGIC
       try {
-        if (typeof firebase === "undefined") throw new Error("Firebase not loaded");
-
         if (isRegisterMode) {
             const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
             const user = userCredential.user;
             await user.updateProfile({ displayName: name });
-
             if (db) {
                 await db.ref('users/' + user.uid).set({
-                    name: name, email: email, phone: phone, nrc: nrc,
-                    role: 'client', joinedAt: new Date().toISOString()
+                    name: name, email: email, phone: phone, nrc: nrc, role: 'client', joinedAt: new Date().toISOString()
                 });
             }
-            showToast("Welcome to Stallz Loans!", "success");
         } else {
             await firebase.auth().signInWithEmailAndPassword(email, password);
         }
         updateSessionActivity();
       } catch (error) {
         if (loader) loader.style.display = "none";
-        let msg = "Authentication failed.";
-        if (error.code === 'auth/wrong-password') msg = "Invalid PIN.";
-        errorMsg.textContent = msg;
-        showToast(msg, "error");
+        showToast("Authentication failed.", "error");
       }
     };
   }
@@ -480,6 +471,13 @@ function getMonthKey(dateStr) {
 }
 
 function computeDerivedFields(loan) {
+  // If PENDING, don't compute overdue etc.
+  if(loan.status === "PENDING") {
+      loan.balance = loan.amount;
+      loan.totalDue = loan.amount;
+      return;
+  }
+
   const today = new Date();
   let rate = INTEREST_BY_PLAN[loan.plan] || 0;
   if (loan.customInterest) rate = Number(loan.customInterest) / 100;
@@ -568,27 +566,19 @@ function openReceipt(loanId) {
 // ==========================================
 
 function refreshUI() {
-  // 1. First, make sure all numbers (balances/overdue status) are fresh
   try { recomputeAllLoans(); } catch(e) { console.error("Error computing loans:", e); }
 
-  // 2. CHECK: Is this a Client?
-  // If the user is logged in AND has the 'client' role...
+  // 1. Client View?
   if (state.user && state.user.role === 'client') {
-
-      // We verify if the client-portal.js file has loaded the function
       if (typeof renderClientPortal === "function") {
           renderClientPortal();
       } else {
-          console.warn("client-portal.js not loaded yet. Waiting...");
-          // Optional: Retry after 100ms if script is slow to load
           setTimeout(refreshUI, 100);
       }
-
-      // IMPORTANT: Stop here! Do not run the Admin dashboard code below.
       return;
   }
 
-  // 3. If NOT a client (aka Admin), run the standard Admin Dashboards
+  // 2. Admin View
   try { renderDashboard(); } catch(e) { console.error("Dash Error:", e); }
   try { renderLoansTable(); } catch(e) { console.error("Loans Table Error:", e); }
   try { renderRepaymentsTable(); } catch(e) { console.error("Repay Table Error:", e); }
@@ -596,11 +586,114 @@ function refreshUI() {
   try { renderClientsTable(); } catch(e) { console.error("Clients Table Error:", e); }
   try { renderAdminsTable(); } catch(e) { console.error("Admins Table Error:", e); }
 
-  // Ensure the Client Portal view is hidden when in Admin mode
+  // New: Render Chart
+  try { renderCashFlowChart(); } catch(e) { console.error("Chart Error:", e); }
+
   const clientView = el("view-client-portal");
   if (clientView) clientView.classList.add("view-hidden");
 }
-// --- UPDATED LOANS TABLE (With Approval, Receipt, WhatsApp) ---
+
+function renderDashboard() {
+    // 1. Cash on Hand
+    const capitalAdded = (state.capitalTxns || []).reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+    const totalPrincipal = (state.loans || []).filter(l=>l.status!=='PENDING').reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
+    const totalRepayments = (state.repayments || []).reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+
+    const startingCap = Number(state.startingCapital) || 0;
+    const cashOnHand = (startingCap + capitalAdded + totalRepayments) - totalPrincipal;
+
+    const elCash = el("cashOnHandValue");
+    if(elCash) animateValue(elCash, 0, cashOnHand, 1000);
+
+    const elStart = el("startingCapitalValue");
+    if(elStart) elStart.textContent = formatMoney(startingCap);
+
+    // 2. Overview Stats
+    const activeLoans = state.loans.filter(l => l.status === "ACTIVE" || l.status === "OVERDUE");
+    const outstanding = activeLoans.reduce((sum, l) => sum + l.balance, 0);
+    const totalProfit = state.loans.reduce((sum, l) => sum + (l.profitCollected || 0), 0);
+
+    // Default Rate (Avoid division by zero)
+    const totalLoans = state.loans.filter(l => l.status === 'PAID' || l.status === 'DEFAULTED').length;
+    const defaulted = state.loans.filter(l => l.status === 'DEFAULTED').length;
+    const defaultRate = totalLoans > 0 ? Math.round((defaulted / totalLoans) * 100) : 0;
+
+    const statsGrid = el("dashboardStats");
+    if(statsGrid) {
+        statsGrid.innerHTML = `
+            <div class="stat-card">
+               <div class="stat-label">Outstanding</div>
+               <div class="stat-value">${formatMoney(outstanding)}</div>
+               <div class="stat-sub">${activeLoans.length} Active Loans</div>
+            </div>
+            <div class="stat-card">
+               <div class="stat-label">Net Profit</div>
+               <div class="stat-value" style="color:#22c55e;">${formatMoney(totalProfit)}</div>
+               <div class="stat-sub">Realized Gains</div>
+            </div>
+            <div class="stat-card">
+               <div class="stat-label">Default Rate</div>
+               <div class="stat-value">${defaultRate}%</div>
+               <div class="stat-sub">${defaulted} Written Off</div>
+            </div>
+        `;
+    }
+}
+
+// --- CHART RENDERING ENGINE (NEW) ---
+let cashFlowChartInstance = null;
+
+function renderCashFlowChart() {
+  const ctx = document.getElementById('cashFlowChart');
+  if (!ctx || typeof Chart === 'undefined') return;
+
+  // 1. Group Data by Month
+  const monthlyData = {};
+  const allMonths = new Set();
+
+  (state.loans || []).filter(l => l.status !== 'PENDING').forEach(l => {
+      const k = getMonthKey(l.startDate);
+      if(k) { allMonths.add(k); monthlyData[k] = monthlyData[k] || { out:0, in:0 }; monthlyData[k].out += Number(l.amount); }
+  });
+
+  (state.repayments || []).forEach(r => {
+      const k = getMonthKey(r.date);
+      if(k) { allMonths.add(k); monthlyData[k] = monthlyData[k] || { out:0, in:0 }; monthlyData[k].in += Number(r.amount); }
+  });
+
+  const sortedMonths = Array.from(allMonths).sort().slice(-6); // Last 6 months
+  const labels = sortedMonths.map(m => {
+      const [y, mo] = m.split('-');
+      return new Date(y, mo-1).toLocaleDateString('en-US', { month:'short' });
+  });
+  const dataOut = sortedMonths.map(m => monthlyData[m].out);
+  const dataIn = sortedMonths.map(m => monthlyData[m].in);
+
+  // 2. Destroy Old Chart
+  if (cashFlowChartInstance) cashFlowChartInstance.destroy();
+
+  // 3. Render New Chart
+  cashFlowChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'Lent Out', data: dataOut, backgroundColor: '#ef4444', borderRadius: 4 },
+        { label: 'Collected', data: dataIn, backgroundColor: '#22c55e', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#94a3b8' } } },
+      scales: {
+        y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        x: { ticks: { color: '#64748b' }, grid: { display: false } }
+      }
+    }
+  });
+}
+
 function renderLoansTable() {
   const overdueCount = (state.loans || []).filter(l => l.status === "OVERDUE").length;
   const badge = el("clientBadge");
@@ -631,26 +724,23 @@ function renderLoansTable() {
   }
 
   tbody.innerHTML = visibleLoans.map((l, index) => {
-    // Progress Logic
     const percent = Math.min(100, Math.round(((l.paid || 0) / (l.totalDue || 1)) * 100));
     let progressColor = "var(--primary)";
 
-    if (percent >= 100) progressColor = "#22c55e"; // Green
-    else if (l.status === "OVERDUE") progressColor = "#ef4444"; // Red
-    else if (l.status === "DEFAULTED") progressColor = "#64748b"; // Grey
-    else if (l.status === "PENDING") progressColor = "#f59e0b"; // Orange (Pending)
+    if (percent >= 100) progressColor = "#22c55e";
+    else if (l.status === "OVERDUE") progressColor = "#ef4444";
+    else if (l.status === "DEFAULTED") progressColor = "#64748b";
+    else if (l.status === "PENDING") progressColor = "#f59e0b"; // Orange
 
     const isOverdue = l.status === "OVERDUE";
     const balanceStyle = isOverdue ? 'class="text-danger-glow" style="font-weight:bold;"' : 'style="font-weight:bold;"';
     const avatarClass = `avatar-${l.id % 5}`;
 
-    // --- WHATSAPP MESSAGE GENERATOR ---
     const waNumber = formatWhatsApp(l.clientPhone);
-    const waMsg = encodeURIComponent(`Hi ${l.clientName}, friendly reminder from Stallz Loans. Your balance of ${formatMoney(l.balance)} was due on ${formatDate(l.dueDate)}. Please make payment today.`);
+    const waMsg = encodeURIComponent(`Hi ${l.clientName}, friendly reminder from Stallz Loans. Your balance of ${formatMoney(l.balance)} was due on ${formatDate(l.dueDate)}.`);
     const waLink = waNumber ? `https://wa.me/${waNumber}?text=${waMsg}` : "#";
     const waStyle = waNumber ? "color:#4ade80;" : "color:#64748b; cursor:not-allowed;";
 
-    // Disable actions if Defaulted/Paid
     const isClosed = l.status === "PAID" || l.status === "DEFAULTED";
 
     return `
@@ -693,13 +783,9 @@ function renderLoansTable() {
         ` : ''}
 
         <button class="btn-icon" onclick="openReceipt(${l.id})" title="Print Receipt">🧾</button>
-
         <a href="${waLink}" target="_blank" class="btn-icon" style="${waStyle}; text-decoration:none; display:inline-block;" title="Send WhatsApp Reminder">💬</a>
-
         <button class="btn-icon" onclick="openActionModal('PAY', ${l.id})" title="Pay" style="color:#38bdf8;" ${isClosed ? 'disabled style="opacity:0.3"' : ''}>💵</button>
-
         <button class="btn-icon" onclick="openActionModal('WRITEOFF', ${l.id})" title="Write Off (Bad Debt)" style="color:#f87171;" ${isClosed ? 'disabled style="opacity:0.3"' : ''}>🚫</button>
-
         <button class="btn-icon" onclick="openActionModal('NOTE', ${l.id})" title="Edit Note">✏️</button>
       </td>
     </tr>
@@ -713,7 +799,7 @@ function approveLoan(id) {
     const loan = state.loans.find(l => l.id === id);
     if (loan) {
         loan.status = "ACTIVE";
-        loan.startDate = new Date().toISOString(); // Start timer now
+        loan.startDate = new Date().toISOString();
 
         // Recalculate due date based on plan
         computeDerivedFields(loan);
@@ -723,7 +809,6 @@ function approveLoan(id) {
         showToast("Loan Approved & Active!", "success");
     }
 }
-
 
 function renderRepaymentsTable() {
   const tbody = el("repaymentsTableBody");
@@ -740,11 +825,12 @@ function renderRepaymentsTable() {
      </tr>`;
   }).join("");
 }
+
 function renderMonthlyTable() {
   const tbody = el("monthlyTableBody");
   if (!tbody) return;
   const map = {};
-  (state.loans || []).forEach(loan => {
+  (state.loans || []).filter(l => l.status !== 'PENDING').forEach(loan => {
     const key = getMonthKey(loan.startDate);
     if (!key) return;
     if (!map[key]) map[key] = { loansOut: 0, in: 0 };
@@ -779,7 +865,6 @@ function renderClientsTable() {
 
   const clientMap = {};
 
-  // 1. Group all loans by Client Name
   (state.loans || []).forEach(loan => {
     const name = (loan.clientName || "Unknown").trim();
     if (!clientMap[name]) {
@@ -802,19 +887,12 @@ function renderClientsTable() {
     const balance = c.loans.reduce((s, l) => s + (Number(l.balance) || 0), 0);
     const activeCount = c.loans.filter(l => l.status === "ACTIVE" || l.status === "OVERDUE").length;
 
-    // --- PERFORMANCE SCORE LOGIC ---
-    // Start with 100 points
     let score = 100;
-
-    // Deduct 50 points for every Bad Debt (Write-off)
     score -= (c.defaults * 50);
-
-    // Deduct 15 points for currently Overdue loans
     score -= (c.overdues * 15);
 
-    // Determine Star Rating based on score
-    let stars = "⭐⭐⭐⭐⭐"; // 100+
-    let ratingColor = "#4ade80"; // Green
+    let stars = "⭐⭐⭐⭐⭐";
+    let ratingColor = "#4ade80";
 
     if (score < 50) { stars = "⚠️ RISKY"; ratingColor = "#ef4444"; }
     else if (score < 70) { stars = "⭐⭐"; ratingColor = "#fbbf24"; }
@@ -824,9 +902,7 @@ function renderClientsTable() {
     return { ...c, borrowed, paid, balance, activeCount, stars, ratingColor };
   });
 
-  // Render
   tbody.innerHTML = clientRows.map(c => {
-    // If they have no active loans, show "Clear", otherwise show "Active"
     const statusHtml = c.activeCount > 0
         ? '<span class="status-pill status-active">Active</span>'
         : '<span class="status-pill status-paid">Clear</span>';
@@ -880,21 +956,17 @@ function updateWizard(direction = "next") {
   const step = LOAN_STEPS[wizardStep];
   const wrapper = el("wizardWrapper");
 
-  // Animation classes
   wrapper.classList.remove("slide-in-right", "slide-out-left", "slide-in-left");
   wrapper.classList.add(direction === "next" ? "slide-in-right" : "slide-in-left");
 
-  // Update Labels
   el("modalStepLabel").textContent = `Step ${wizardStep + 1} of ${LOAN_STEPS.length}`;
   el("modalFieldLabel").textContent = step.label;
   el("modalHelper").textContent = step.helper;
 
-  // Update Dots
   el("modalStepDots").innerHTML = LOAN_STEPS.map((_, i) =>
     `<div class="step-dot ${i === wizardStep ? 'active' : ''}"></div>`
   ).join("");
 
-  // Create Input Container
   const container = el("modalFieldContainer");
   container.innerHTML = "";
 
@@ -916,7 +988,6 @@ function updateWizard(direction = "next") {
     if(step.placeholder) input.placeholder = step.placeholder;
     input.setAttribute("autocomplete", "off");
 
-    // Client Auto-complete Logic
     if (step.key === "clientName") {
        input.setAttribute("list", "clientList");
        const uniqueClients = [...new Set(state.loans.map(l => l.clientName))].sort();
@@ -925,45 +996,36 @@ function updateWizard(direction = "next") {
     }
   }
 
-  // Set existing value if drafting
   if (wizardDraft[step.key]) input.value = wizardDraft[step.key];
   input.id = "wizardInput";
   container.appendChild(input);
 
-  // --- NEW: SMART DATE CHIPS ---
   if (step.type === "date") {
     const chipContainer = document.createElement("div");
     chipContainer.style.cssText = "display:flex; gap:10px; margin-top:12px;";
 
-    // Helper to create chips
     const createChip = (text, dateVal) => {
       const btn = document.createElement("button");
-      btn.type = "button"; // Prevent form submit
+      btn.type = "button";
       btn.className = "btn-secondary btn-sm";
       btn.style.cssText = "padding:6px 12px; font-size:0.75rem; border-radius:20px; border:1px solid var(--primary); color:var(--primary); background:rgba(59, 130, 246, 0.1);";
       btn.textContent = text;
       btn.onclick = () => {
         el("wizardInput").value = dateVal;
-        vibrate([20]); // Haptic feedback
+        vibrate([20]);
       };
       return btn;
     };
 
-    // 'Today' Chip
     chipContainer.appendChild(createChip("Today", getLocalDateVal()));
-
-    // 'Yesterday' Chip
     const y = new Date(); y.setDate(y.getDate() - 1);
-    const yesterdayStr = y.toISOString().split('T')[0];
-    chipContainer.appendChild(createChip("Yesterday", yesterdayStr));
+    chipContainer.appendChild(createChip("Yesterday", y.toISOString().split('T')[0]));
 
     container.appendChild(chipContainer);
   }
 
-  // Focus Input
   setTimeout(() => input.focus(), 100);
 
-  // Button States
   el("modalBackBtn").style.visibility = wizardStep === 0 ? "hidden" : "visible";
   el("modalNextBtn").textContent = wizardStep === LOAN_STEPS.length - 1 ? "Finish & Save" : "Next →";
 }
@@ -1048,26 +1110,23 @@ function openActionModal(action, loanId) {
 }
 
 // ==========================================
-// 8. MOBILE UX ENHANCEMENTS (Vibration, Long Press, Install)
+// 8. MOBILE UX ENHANCEMENTS
 // ==========================================
 
-// 1. HAPTIC ENGINE
 function vibrate(pattern = [15]) {
   if (typeof navigator !== "undefined" && navigator.vibrate) {
     navigator.vibrate(pattern);
   }
 }
 
-// 2. SETUP MOBILE LISTENERS (Call this inside init())
 function setupMobileUX() {
-  // --- A. INSTALL APP PROMPT ---
   let deferredPrompt;
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
     const btn = el("installAppBtn");
     if (btn) {
-      btn.style.display = "inline-flex"; // Show button
+      btn.style.display = "inline-flex";
       btn.addEventListener('click', () => {
         vibrate([30]);
         deferredPrompt.prompt();
@@ -1081,27 +1140,21 @@ function setupMobileUX() {
     }
   });
 
-  // --- B. LONG PRESS TO PAY (Touch Devices) ---
   let longPressTimer;
-  const touchDuration = 800; // 800ms hold time
+  const touchDuration = 800;
 
   document.addEventListener("touchstart", (e) => {
-    // Find the closest row
     const row = e.target.closest("tr");
     if (!row) return;
-
-    // Check if it's a loan row (has an ID cell)
     const idCell = row.querySelector("td[data-label='ID'] span");
     if (!idCell) return;
-
-    // Extract ID (remove #)
     const idText = idCell.textContent.replace('#', '');
     const loanId = parseInt(idText);
 
     if (loanId) {
       longPressTimer = setTimeout(() => {
-        vibrate([40, 40]); // Double buzz confirmation
-        openActionModal("PAY", loanId); // Open Pay modal
+        vibrate([40, 40]);
+        openActionModal("PAY", loanId);
       }, touchDuration);
     }
   }, { passive: true });
@@ -1109,59 +1162,47 @@ function setupMobileUX() {
   document.addEventListener("touchend", () => clearTimeout(longPressTimer));
   document.addEventListener("touchmove", () => clearTimeout(longPressTimer));
 
-  // --- C. iOS INSTALL MODAL (iPhone Only) ---
-  function checkIosInstall() {
-    // Check if user agent is iPhone/iPad/iPod
-    const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
-    // Check if already in standalone mode (installed)
-    const isStandalone = window.navigator.standalone === true;
-
-    if (isIos && !isStandalone) {
-        // Show instructions after 2 seconds
-        setTimeout(() => {
-            const modal = document.getElementById("iosInstallModal");
-            if(modal) modal.classList.remove("modal-hidden");
-        }, 2000);
-    }
+  // iOS Install Instructions
+  const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+  const isStandalone = window.navigator.standalone === true;
+  if (isIos && !isStandalone) {
+      setTimeout(() => {
+          const modal = document.getElementById("iosInstallModal");
+          if(modal) modal.classList.remove("modal-hidden");
+      }, 2000);
   }
-
-  // Listener for closing the iOS modal
   document.getElementById("closeIosModalBtn")?.addEventListener("click", () => {
     document.getElementById("iosInstallModal").classList.add("modal-hidden");
   });
-
-  // Run the check
-  checkIosInstall();
 }
 
-// 3. OVERRIDE TOAST TO VIBRATE
 const originalShowToast = showToast;
 showToast = function(message, type = "success") {
-  if (type === "success") vibrate([30]);     // Short buzz for success
-  if (type === "error") vibrate([40, 40, 40]); // 3 buzzes for error
+  if (type === "success") vibrate([30]);
+  if (type === "error") vibrate([40, 40, 40]);
   originalShowToast(message, type);
 };
 
 // ==========================================
-// 9. MAIN INIT (The "Start Button")
+// 9. MAIN INIT
 // ==========================================
 function init() {
-  // 1. Navigation Listeners (Bottom/Top Bar)
+  // 1. Navigation
   document.querySelectorAll(".nav-btn").forEach(btn => {
     btn.addEventListener("click", () => {
-      vibrate([10]); // Tiny click feedback
+      vibrate([10]);
       setActiveView(btn.dataset.view);
     });
   });
 
-  // 2. Wizard Modal Listeners (New Loan)
+  // 2. Wizard Modals
   const openLoanBtn = el("openLoanModalBtn");
   if (openLoanBtn) {
       openLoanBtn.addEventListener("click", () => {
         vibrate([10]);
         wizardStep = 0;
         wizardDraft = {};
-        updateWizard(); // Reset wizard to Step 1
+        updateWizard();
         el("loanModal").classList.remove("modal-hidden");
       });
   }
@@ -1170,13 +1211,12 @@ function init() {
   el("modalNextBtn")?.addEventListener("click", () => { vibrate([10]); handleWizardNext(); });
   el("modalBackBtn")?.addEventListener("click", () => { vibrate([10]); handleWizardBack(); });
 
-  // 3. Action Modal Listeners (Pay, Note, etc.)
+  // 3. Action Modals
   el("actionModalCloseBtn")?.addEventListener("click", () => el("actionModal").classList.add("modal-hidden"));
   el("actionModalCancelBtn")?.addEventListener("click", () => el("actionModal").classList.add("modal-hidden"));
 
-  // 4. CONFIRM ACTION LISTENER (Handles Pay, Note, Write-Off)
   el("actionModalConfirmBtn")?.addEventListener("click", () => {
-     vibrate([20]); // Haptic feedback on confirm
+     vibrate([20]);
      const loan = state.loans.find(l => l.id === currentLoanId);
 
      if (currentAction === "PAY" && loan) {
@@ -1199,7 +1239,6 @@ function init() {
         loan.notes = el("actNote").value;
      }
      else if (currentAction === "WRITEOFF" && loan) {
-        // --- BAD DEBT LOGIC ---
         loan.isDefaulted = true;
         loan.status = "DEFAULTED";
         const reason = el("actNote").value;
@@ -1211,11 +1250,11 @@ function init() {
      el("actionModal").classList.add("modal-hidden");
 
      if (currentAction === "PAY") showToast("Payment recorded!", "success");
-     else if (currentAction === "WRITEOFF") showToast("Loan written off as Bad Debt", "error");
+     else if (currentAction === "WRITEOFF") showToast("Loan written off", "error");
      else showToast("Note updated!", "success");
   });
 
-  // 5. Capital Tabs Logic
+  // 4. Capital Tabs
   document.querySelectorAll('.mini-tab').forEach(b => {
       b.addEventListener('click', () => {
           vibrate([10]);
@@ -1226,7 +1265,7 @@ function init() {
       });
   });
 
-  // 6. Capital Buttons (Set Initial & Add New)
+  // 5. Capital Actions
   el("setStartingCapitalBtn")?.addEventListener("click", () => {
       const val = Number(el("startingCapitalInitial").value);
       if (val > 0) {
@@ -1256,7 +1295,7 @@ function init() {
       showToast("Capital added successfully!", "success");
   });
 
-  // 7. Export Excel
+  // 6. Export
   el("exportBtn")?.addEventListener("click", () => {
      vibrate([20]);
      try {
@@ -1276,12 +1315,12 @@ function init() {
        XLSX.utils.book_append_sheet(wb, ws, "Loans");
        XLSX.writeFile(wb, "Stallz_Loans.xlsx");
      } catch (e) {
-         showToast("Export failed. Check internet connection.", "error");
+         showToast("Export failed.", "error");
          console.error(e);
      }
   });
 
-  // 8. Smart Hide Navigation (Scroll Listener)
+  // 7. Scroll Nav
   let lastScroll = 0;
   const nav = document.querySelector('.top-nav');
   if (nav) {
@@ -1296,45 +1335,30 @@ function init() {
     }, { passive: true });
   }
 
-  // 9. Filters (Search, Status, Plan)
   ["searchInput", "statusFilter", "planFilter"].forEach(id => el(id)?.addEventListener("input", renderLoansTable));
 
-  // 10. NEW: ADMIN LOGOUT BUTTON
-  // This allows Admins to exit the dashboard and return to Login
+  // 8. Admin Logout
   const adminLogoutBtn = el("adminLogoutBtn");
   if (adminLogoutBtn) {
       adminLogoutBtn.addEventListener("click", () => {
           vibrate([20]);
           if (confirm("Log out of Admin Dashboard?")) {
-              // Clear local session markers
               localStorage.removeItem("stallz_test_session");
               localStorage.removeItem("stallz_last_active");
-
-              // Sign out of Firebase
-              if (typeof firebase !== "undefined" && firebase.auth) {
-                  firebase.auth().signOut();
-              }
-
-              // Reset State
+              if (typeof firebase !== "undefined" && firebase.auth) firebase.auth().signOut();
               state.user = null;
               state.isLoggedIn = false;
-
-              // Force Reload
               location.reload();
           }
       });
   }
 
-  // 11. STARTUP SEQUENCE
-  checkTimeBasedTheme(); // Set Light/Dark mode
-  setInterval(checkTimeBasedTheme, 60000); // Re-check every minute
-
-  setActiveView("main"); // Default to Overview
-  showWelcomeScreen();   // Show Login/Register
-
-  checkAppVersion();     // Check for v1.6 update
-  setupMobileUX();       // Initialize Vibrations & Install Prompt
+  // 9. Startup Sequence
+  initTheme(); // NEW: Smart Theme
+  setActiveView("main");
+  showWelcomeScreen();
+  checkAppVersion();
+  setupMobileUX();
 }
 
-// Start the engine when the DOM is ready
 document.addEventListener("DOMContentLoaded", init);

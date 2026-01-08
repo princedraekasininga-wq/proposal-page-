@@ -11,8 +11,10 @@
   <link rel="manifest" href="manifest.json">
 
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="client-portal.css"> <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-</head>
+  <link rel="stylesheet" href="client-portal.css">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> </head>
 <body>
 
   <div id="loadingOverlay" style="position:fixed; inset:0; background:#020617; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; transition: opacity 0.5s;">
@@ -66,6 +68,7 @@
         <h1>
             <img src="my-logo.png" class="logo-img">
             STALLZ LOANS
+            <button id="themeToggleBtn" class="btn-icon" style="margin-left:8px; font-size:1.2rem; background:none; border:none; cursor:pointer;">🌓</button>
         </h1>
 
         <button id="installAppBtn" class="btn-secondary btn-sm" style="display:none; margin-left:12px; border-color:#22c55e; color:#22c55e;">
@@ -159,6 +162,11 @@
                   <button type="button" id="addCapitalBtn" class="btn btn-sm">Add</button>
                 </div>
               </div>
+            </div>
+
+            <div class="section-title">Cash Flow Trends</div>
+            <div style="background:rgba(255,255,255,0.02); padding:10px; border-radius:12px; border:1px solid var(--divider); height: 250px; position: relative;">
+              <canvas id="cashFlowChart"></canvas>
             </div>
 
             <div class="section-title">Capital Ledger</div>
@@ -295,6 +303,27 @@
                <div id="cpDueDate" class="cp-due-badge">No active loans</div>
             </div>
 
+            <div class="card" style="background: rgba(255,255,255,0.05); margin-bottom: 24px; border: 1px solid var(--divider);">
+              <div style="padding: 16px;">
+                <h3 style="margin-top:0; font-size:1rem; color:var(--text-main);">🧮 Quick Calculator</h3>
+
+                <div style="display:flex; gap:10px; margin-bottom:12px;">
+                  <input type="number" id="calcAmount" placeholder="Amount (e.g. 500)" style="margin:0; background:rgba(0,0,0,0.3);">
+                  <select id="calcPlan" style="margin:0; background:rgba(0,0,0,0.3);">
+                    <option value="Weekly">1 Week (20%)</option>
+                    <option value="2 Weeks">2 Weeks (30%)</option>
+                    <option value="3 Weeks">3 Weeks (35%)</option>
+                    <option value="Monthly">1 Month (40%)</option>
+                  </select>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(59, 130, 246, 0.1); padding:10px; border-radius:8px;">
+                  <span style="font-size:0.8rem; color:var(--text-muted);">You Pay Back:</span>
+                  <strong id="calcResult" style="color:var(--primary); font-size:1.2rem;">K0.00</strong>
+                </div>
+              </div>
+            </div>
+
             <div class="cp-actions" style="flex-wrap: wrap;">
                <button id="cpRefreshBtn" class="btn-secondary cp-btn-refresh">
                   🔄
@@ -400,7 +429,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js" defer></script>
 
   <script src="app.js?v=1.6" defer></script>
-
   <script src="client-portal.js?v=1.0" defer></script>
 
 </body>
