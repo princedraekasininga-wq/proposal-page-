@@ -513,3 +513,76 @@ tbody tr:hover {
   .logo-img { height: 48px; margin-right: 10px; margin-top: 6px; transform: none; }
   .hud-rates { width: 100%; justify-content: center; padding-bottom: 4px; }
 }
+
+/* =========================================
+   FLOATING NAVIGATION (FAB)
+   ========================================= */
+.fab-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.fab-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--primary);
+    border: none;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.5);
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.fab-btn:active { transform: scale(0.9); }
+.fab-btn.open { transform: rotate(45deg); background: #ef4444; }
+
+.fab-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(20px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    align-items: flex-end;
+}
+
+.fab-menu.show {
+    opacity: 1;
+    pointer-events: all;
+    transform: translateY(0);
+}
+
+.fab-item {
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-main);
+    padding: 10px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.2s;
+    white-space: nowrap;
+}
+
+.fab-item:hover { background: rgba(255,255,255,0.1); }
+.fab-item .icon { font-size: 1.1rem; }
+
+/* Hide standard "Add" button if using this FAB */
+.fab-add { display: none !important; }

@@ -430,6 +430,49 @@
 
   <script src="app.js?v=1.6" defer></script>
   <script src="client-portal.js?v=1.0" defer></script>
+<div class="fab-container">
+    <button id="fabMainBtn" class="fab-btn">
+      <span class="fab-icon">⚡</span>
+    </button>
+    <div id="fabMenu" class="fab-menu">
+      <button id="fabRequestLoan" class="fab-item">
+        <span class="icon">✋</span> Request Loan
+      </button>
+      <button id="fabCalculator" class="fab-item">
+        <span class="icon">🧮</span> Calculator
+      </button>
+      <button id="fabPay" class="fab-item">
+        <span class="icon">💳</span> Pay Now
+      </button>
+    </div>
+  </div>
 
+  <div id="calculatorModal" class="modal-overlay modal-hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Loan Calculator</div>
+        <button id="closeCalcModal" class="modal-close">-</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+            <label>Amount (K)</label>
+            <input type="number" id="modalCalcAmount" placeholder="e.g. 500">
+        </div>
+        <div class="field">
+            <label>Plan</label>
+            <select id="modalCalcPlan">
+                <option value="Weekly">1 Week (20%)</option>
+                <option value="2 Weeks">2 Weeks (30%)</option>
+                <option value="3 Weeks">3 Weeks (35%)</option>
+                <option value="Monthly">1 Month (40%)</option>
+            </select>
+        </div>
+        <div style="background:rgba(59, 130, 246, 0.1); padding:15px; border-radius:12px; text-align:center; margin-top:10px;">
+            <div style="font-size:0.8rem; color:#94a3b8;">You Pay Back</div>
+            <div id="modalCalcResult" style="font-size:1.8rem; font-weight:bold; color:#3b82f6;">K0.00</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
