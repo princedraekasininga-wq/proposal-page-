@@ -555,8 +555,34 @@ tbody tr:hover {
 .nav-badge.show { display: block; }
 
 @media (max-width: 600px) {
-  header { padding: 12px 16px; flex-direction: column; align-items: center; gap: 16px; }
-  .header-brand h1 { font-size: 1.6rem; justify-content: center; width: 100%; text-align: center; }
-  .hud-rates { width: 100%; justify-content: center; padding-bottom: 4px; }
-  .logo-img { height: 53px; margin-right: 10px; }
+  header {
+    padding: 12px 16px;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* Container setup */
+  .header-brand h1 {
+    font-size: 1.6rem;
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+    display: flex;       /* Ensures flex behavior */
+    align-items: center; /* Vertically centers items */
+  }
+
+  /* The Fix: Pushing the logo down */
+  .logo-img {
+    height: 45px;       /* Slightly reduced for better mobile proportion */
+    margin-right: 10px;
+    margin-top: 6px;    /* <--- THIS moves the logo down. Increase to 8px or 10px if needed. */
+    transform: none;    /* Removes the 3D tilt on mobile for a cleaner look */
+  }
+
+  .hud-rates {
+    width: 100%;
+    justify-content: center;
+    padding-bottom: 4px;
+  }
 }

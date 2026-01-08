@@ -26,7 +26,6 @@ try {
     firebase.initializeApp(firebaseConfig);
 
     // OPTIMIZATION: Keep user logged in across refreshes
-    // This reduces the "handshake" time with Google servers
     firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
       .catch((error) => console.error("Auth Persistence Error:", error));
 
@@ -176,7 +175,6 @@ let currentLoanId = null;
 // ==========================================
 // 3. AUTHENTICATION & CLOUD SYNC
 // ==========================================
-// const TEST_MODE = true;
 
 function showWelcomeScreen() {
   const screen = el("welcomeScreen");
@@ -1008,6 +1006,30 @@ function setupMobileUX() {
 
   document.addEventListener("touchend", () => clearTimeout(longPressTimer));
   document.addEventListener("touchmove", () => clearTimeout(longPressTimer));
+
+  // --- C. iOS INSTALL MODAL (iPhone Only) ---
+  function checkIosInstall() {
+    // Check if user agent is iPhone/iPad/iPod
+    const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+    // Check if already in standalone mode (installed)
+    const isStandalone = window.navigator.standalone === true;
+
+    if (isIos && !isStandalone) {
+        // Show instructions after 2 seconds
+        setTimeout(() => {
+            const modal = document.getElementById("iosInstallModal");
+            if(modal) modal.classList.remove("modal-hidden");
+        }, 2000);
+    }
+  }
+
+  // Listener for closing the iOS modal
+  document.getElementById("closeIosModalBtn")?.addEventListener("click", () => {
+    document.getElementById("iosInstallModal").classList.add("modal-hidden");
+  });
+
+  // Run the check
+  checkIosInstall();
 }
 
 // 3. OVERRIDE TOAST TO VIBRATE

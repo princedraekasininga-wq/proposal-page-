@@ -39,6 +39,7 @@
 
   <div class="app-shell">
     <header>
+      <div class="header-brand">
         <h1>
             <img src="my-logo.png" class="logo-img">
             STALLZ LOANS
@@ -46,7 +47,8 @@
         <button id="installAppBtn" class="btn-secondary btn-sm" style="display:none; margin-left:12px; border-color:#22c55e; color:#22c55e;">
             ⬇ Install App
         </button>
-        <div class="hud-rates">
+      </div>
+      <div class="hud-rates">
         <div class="hud-badge">20% <span>1Wk</span></div>
         <div class="hud-badge">30% <span>2Wks</span></div>
         <div class="hud-badge">35% <span>3Wks</span></div>
@@ -367,6 +369,28 @@
         <button type="button" id="actionModalCancelBtn" class="btn-secondary btn-sm">Cancel</button>
         <button type="button" id="actionModalConfirmBtn" class="btn btn-sm">Confirm</button>
       </div>
+    </div>
+  </div>
+
+  <div id="iosInstallModal" class="modal-overlay modal-hidden" style="align-items: flex-end;">
+    <div class="modal" style="margin-bottom: 20px; text-align: center; max-width: 100%;">
+      <div style="font-size: 3rem; margin-bottom: 10px;">📲</div>
+      <h3 style="color:white; margin:0 0 8px 0;">Install Stallz Loans</h3>
+      <p style="color:#94a3b8; font-size:0.9rem; margin-bottom:20px;">
+        To install this app on your iPhone, tap the <strong>Share</strong> button below and select <strong>"Add to Home Screen"</strong>.
+      </p>
+      <div style="display:flex; justify-content:center; gap:20px; align-items:center; color:white; font-size:0.9rem; margin-bottom:20px;">
+          <span style="display:flex; flex-direction:column; align-items:center;">
+              <span style="font-size:1.5rem; background:rgba(255,255,255,0.1); width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:8px;">1</span>
+              Tap Share <br> (Square with arrow)
+          </span>
+          <span style="font-size:1.5rem;">→</span>
+          <span style="display:flex; flex-direction:column; align-items:center;">
+               <span style="font-size:1.5rem; background:rgba(255,255,255,0.1); width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:8px;">2</span>
+              Scroll down & <br> 'Add to Home Screen'
+          </span>
+      </div>
+      <button id="closeIosModalBtn" class="btn-secondary btn-sm">Got it</button>
     </div>
   </div>
 
