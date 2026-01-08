@@ -81,6 +81,20 @@
 [data-theme="light"] h2 {
   text-shadow: none; /* Remove neon glow for crisp text */
 }
+/* BAD DEBT / WRITE OFF STYLE */
+.status-defaulted {
+  background: rgba(15, 23, 42, 0.5);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-decoration: line-through;
+}
+
+/* Light Mode Override for Bad Debt */
+[data-theme="light"] .status-defaulted {
+  background: #f1f5f9;
+  color: #94a3b8;
+  border: 1px solid #cbd5e1;
+}
 
 /* Force light inputs in light mode */
 [data-theme="light"] input,
