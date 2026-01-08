@@ -1,0 +1,105 @@
+/* =========================================
+   CLIENT PORTAL STYLES
+   ========================================= */
+
+/* Main Layout */
+.cp-card-inner {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+/* Typography */
+.cp-greeting {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.cp-client-name {
+    font-size: 2rem;
+    margin: 0 0 30px 0;
+    color: var(--text-main);
+}
+
+/* Balance Card (The Gradient Box) */
+.cp-balance-card {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    padding: 30px;
+    border-radius: 24px;
+    box-shadow: 0 10px 40px rgba(59, 130, 246, 0.4);
+    margin-bottom: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Shine Animation */
+.cp-shine {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.cp-label {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.cp-balance-amount {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: white;
+    margin: 10px 0;
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.cp-due-badge {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(0, 0, 0, 0.2);
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+}
+
+/* Action Buttons */
+.cp-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 40px;
+}
+
+.cp-btn-refresh {
+    border-radius: 50px;
+    padding: 12px 24px;
+}
+
+.cp-btn-pay {
+    border-radius: 50px;
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+}
+
+/* Logout Area */
+.cp-logout-container {
+    margin-top: 40px;
+    border-top: 1px solid var(--divider);
+    padding-top: 20px;
+}
+
+.cp-logout-btn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.9rem;
+}

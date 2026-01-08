@@ -1,4 +1,10 @@
 // ==========================================
+// APP VERSION CONTROL
+// ==========================================
+const APP_VERSION = "1.6"; // <--- Update this to match your HTML
+
+
+// ==========================================
 // 1. FIREBASE CONFIGURATION & SETUP
 // ==========================================
 
@@ -77,22 +83,27 @@ function formatWhatsApp(phone) {
   return p;
 }
 
-// --- TOAST HELPER ---
+// --- TOAST NOTIFICATION (Minimal) ---
 function showToast(message, type = "success") {
   const container = el("toast-container");
   if (!container) return;
 
   const toast = document.createElement("div");
-  const icon = type === "success" ? "✨" : "⚠️";
   toast.className = `toast ${type}`;
-  toast.innerHTML = `<span style="font-size:1.2rem;">${icon}</span> <span>${message}</span>`;
-  container.appendChild(toast);
-  setTimeout(() => {
-    toast.style.animation = "toastOut 0.5s forwards";
-    setTimeout(() => toast.remove(), 500);
-  }, 3500);
-}
+  toast.textContent = message;
 
+  container.appendChild(toast);
+
+  // Vibration logic
+  if (type === "success") vibrate([20]);
+  if (type === "error") vibrate([30, 30]);
+
+  // Remove faster (2.5 seconds) for a snappy feel
+  setTimeout(() => {
+    toast.style.animation = "toastFadeOut 0.4s forwards";
+    setTimeout(() => toast.remove(), 400);
+  }, 2500);
+}
 // --- SESSION MANAGEMENT ---
 function updateSessionActivity() {
   localStorage.setItem("stallz_last_active", Date.now());
@@ -100,6 +111,28 @@ function updateSessionActivity() {
 document.addEventListener("click", updateSessionActivity);
 document.addEventListener("keydown", updateSessionActivity);
 document.addEventListener("touchstart", updateSessionActivity);
+
+function checkAppVersion() {
+  const storedVersion = localStorage.getItem("stallz_app_version");
+
+  // Display Version in the UI (e.g., on the Welcome Screen)
+  const subtitle = document.querySelector(".welcome-subtitle");
+  if (subtitle) {
+      subtitle.textContent = `Secure Admin Login (v${APP_VERSION})`;
+  }
+
+  // Check for Update
+  if (storedVersion !== APP_VERSION) {
+    // New version detected!
+    localStorage.setItem("stallz_app_version", APP_VERSION);
+
+    // Show a special update toast
+    setTimeout(() => {
+        showToast(`App Updated to v${APP_VERSION}`, "success");
+        vibrate([50, 50, 50]); // Distinct vibration pattern
+    }, 1500); // Wait for the "Connecting" screen to finish
+  }
+}
 
 // --- ROLLING COUNTER ANIMATION ---
 function animateValue(obj, start, end, duration) {
@@ -178,108 +211,211 @@ let currentLoanId = null;
 
 function showWelcomeScreen() {
   const screen = el("welcomeScreen");
-  const loginBtn = el("authLoginBtn");
+  const actionBtn = el("authActionBtn");
+  const toggleBtn = el("authToggleBtn");
   const errorMsg = el("authError");
   const loader = el("loadingOverlay");
 
-  // --- 1. CHECK FOR SESSIONS (Real or Test) ---
+  // Elements for toggling
+  const regFields = el("registerFields");
+  const authTitle = el("authTitle");
+  const toggleText = el("authToggleText");
+
+  // State: Are we registering?
+  let isRegisterMode = false;
+
+  // --- 1. SESSION CHECK (Auto-Login) ---
   const lastActive = localStorage.getItem("stallz_last_active");
-  const testSession = localStorage.getItem("stallz_test_session"); // <--- NEW: Checks for test login
+  const testSession = localStorage.getItem("stallz_test_session");
   const now = Date.now();
   const THIRTY_MINUTES = 30 * 60 * 1000;
 
-  // Session Timeout Logic
   if (lastActive && (now - lastActive > THIRTY_MINUTES)) {
-    console.log("Session expired. Logging out.");
+    console.log("Session expired.");
     if (typeof firebase !== "undefined" && firebase.auth) firebase.auth().signOut();
     localStorage.removeItem("stallz_last_active");
-    localStorage.removeItem("stallz_test_session"); // Clear test session too
-
+    localStorage.removeItem("stallz_test_session");
     if (loader) loader.style.display = "none";
     screen.style.display = "flex";
     return;
   }
 
-  // --- 2. AUTO-LOGIN LOGIC ---
-  if (TEST_MODE) {
-    // If we are in Test Mode AND have a saved test session...
-    if (testSession === "true") {
-       console.log("TEST MODE: Auto-logging in from saved session...");
-       state.user = { email: "test@admin.com", uid: "test-user-123" };
+  // AUTO-RESUME LOGIC
+  if (TEST_MODE && testSession === "true") {
+       // Simulate Admin in Test Mode
+       state.user = { email: "test@admin.com", uid: "test-user-123", role: "admin" };
        state.isLoggedIn = true;
        updateSessionActivity();
-
-       // Hide login immediately, show loader while data loads
        screen.style.display = "none";
-       if (loader) loader.style.display = "flex";
-
+       if (loader) { loader.style.display = "flex"; loader.style.opacity = "1"; }
        loadFromFirebase();
-    } else {
-       // No saved session? Show login screen
-       if (loader) loader.style.display = "none";
-       screen.style.display = "flex";
-    }
-  }
-  // Real Firebase Logic (Unchanged)
-  else if (typeof firebase !== "undefined" && firebase.auth) {
+  } else if (typeof firebase !== "undefined" && firebase.auth) {
+      // REAL FIREBASE AUTH LISTENER
       firebase.auth().onAuthStateChanged((user) => {
         if (user) {
-          updateSessionActivity();
-          state.user = user;
-          state.isLoggedIn = true;
-          screen.style.display = "none";
-          // Keep loader visible until data loads (handled inside loadFromFirebase)
-          if (loader) { loader.style.display = "flex"; loader.style.opacity = "1"; }
-          loadFromFirebase();
+          // --- CRITICAL: FETCH USER ROLE FROM DB ---
+          if (db) {
+             db.ref('users/' + user.uid).once('value').then((snap) => {
+                 const profile = snap.val() || {};
+                 // Merge Auth User + DB Profile (Role, Phone, NRC)
+                 state.user = { ...user, ...profile };
+                 state.isLoggedIn = true;
+
+                 updateSessionActivity();
+                 screen.style.display = "none";
+
+                 // Show loader while fetching main data
+                 if (loader) { loader.style.display = "flex"; loader.style.opacity = "1"; }
+                 loadFromFirebase();
+             }).catch(err => {
+                 console.error("Profile fetch error:", err);
+                 // Fallback if DB fails
+                 state.user = user;
+                 state.isLoggedIn = true;
+                 screen.style.display = "none";
+                 loadFromFirebase();
+             });
+          } else {
+             // Fallback if DB not ready
+             state.user = user;
+             state.isLoggedIn = true;
+             screen.style.display = "none";
+             loadFromFirebase();
+          }
         } else {
+          // No user found -> Show Login Screen
           if (loader) loader.style.display = "none";
           screen.style.display = "flex";
         }
       });
   } else {
-      // Fallback if firebase is missing
+      // Default fallback
       if (loader) loader.style.display = "none";
       screen.style.display = "flex";
   }
 
-  // --- 3. LOGIN BUTTON LOGIC ---
-  if (loginBtn) {
-    loginBtn.onclick = async () => {
+  // --- 2. TOGGLE MODE (Login <-> Register) ---
+  if (toggleBtn) {
+      toggleBtn.onclick = () => {
+          isRegisterMode = !isRegisterMode;
+          errorMsg.textContent = ""; // Clear errors
+
+          if (isRegisterMode) {
+              // Switch to REGISTER view
+              regFields.style.display = "block";
+              actionBtn.textContent = "Create Account";
+              authTitle.textContent = "Register a new profile";
+              toggleText.textContent = "Already have an account?";
+              toggleBtn.textContent = "Login";
+          } else {
+              // Switch back to LOGIN view
+              regFields.style.display = "none";
+              actionBtn.textContent = "Login";
+              authTitle.textContent = "Sign in with PIN";
+              toggleText.textContent = "Don't have an account?";
+              toggleBtn.textContent = "Create Account";
+          }
+      };
+  }
+
+  // --- 3. MAIN ACTION (Login OR Register) ---
+  if (actionBtn) {
+    actionBtn.onclick = async () => {
       const email = el("loginEmail").value.trim();
-      const password = el("loginPassword").value.trim();
+      const password = el("loginPassword").value.trim(); // This is the PIN
+
+      // Get Extra Fields if registering
+      const name = isRegisterMode ? el("regName").value.trim() : "";
+      const phone = isRegisterMode ? el("regPhone").value.trim() : "";
+      const nrc = isRegisterMode ? el("regNRC").value.trim() : "";
 
       if (!email || !password) {
-        errorMsg.textContent = "Please enter both email and password.";
+        showToast("Please enter email and PIN", "error");
         return;
       }
+
+      if (isRegisterMode) {
+          if (!name || !phone || !nrc) {
+             showToast("All fields (Name, NRC, Phone) are required", "error");
+             return;
+          }
+      }
+
+      // SHOW LOADER
       if (loader) { loader.style.display = "flex"; loader.style.opacity = "1"; }
 
+      // --- A. TEST MODE HANDLING ---
       if (TEST_MODE) {
         setTimeout(() => {
-          // SAVE THE FAKE SESSION SO IT REMEMBERS YOU ON REFRESH
           localStorage.setItem("stallz_test_session", "true");
 
-          state.user = { email: email || "test@admin.com", uid: "test-user-123" };
+          const role = isRegisterMode ? "client" : "admin";
+
+          state.user = {
+              email: email,
+              uid: "test-" + Date.now(),
+              displayName: name || "Test User",
+              role: role
+          };
+
           state.isLoggedIn = true;
           updateSessionActivity();
+
           screen.style.display = "none";
           loadFromFirebase();
-        }, 500);
+
+          if (isRegisterMode) showToast("Account created (Test Mode)", "success");
+        }, 1000);
         return;
       }
 
-      // Real Auth
+      // --- B. REAL FIREBASE HANDLING ---
       try {
         if (typeof firebase === "undefined") throw new Error("Firebase not loaded");
-        await firebase.auth().signInWithEmailAndPassword(email, password);
+
+        if (isRegisterMode) {
+            // 1. CREATE ACCOUNT (Email + PIN)
+            const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+
+            // 2. UPDATE PROFILE (Name)
+            await user.updateProfile({ displayName: name });
+
+            // 3. SAVE FULL PROFILE TO DB (Including NRC)
+            if (db) {
+                await db.ref('users/' + user.uid).set({
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    nrc: nrc,  // <--- SAVING NRC HERE
+                    role: 'client', // Defaults to Client
+                    joinedAt: new Date().toISOString()
+                });
+            }
+            showToast("Welcome to Stallz Loans!", "success");
+        } else {
+            // LOGIN (Email + PIN)
+            await firebase.auth().signInWithEmailAndPassword(email, password);
+        }
+
         updateSessionActivity();
       } catch (error) {
         if (loader) loader.style.display = "none";
-        errorMsg.textContent = "Login failed: " + error.message;
+
+        // Friendly Error Messages
+        let msg = "Authentication failed.";
+        if (error.code === 'auth/email-already-in-use') msg = "That email is already registered.";
+        if (error.code === 'auth/weak-password') msg = "PIN must be at least 6 digits.";
+        if (error.code === 'auth/wrong-password') msg = "Invalid PIN or Email.";
+        if (error.code === 'auth/user-not-found') msg = "No account found.";
+
+        errorMsg.textContent = msg;
+        showToast(msg, "error");
       }
     };
   }
 }
+
 
 function loadFromFirebase() {
   if (TEST_MODE) {
@@ -462,103 +598,38 @@ function openReceipt(loanId) {
 // ==========================================
 
 function refreshUI() {
+  // 1. First, make sure all numbers (balances/overdue status) are fresh
   try { recomputeAllLoans(); } catch(e) { console.error("Error computing loans:", e); }
+
+  // 2. CHECK: Is this a Client?
+  // If the user is logged in AND has the 'client' role...
+  if (state.user && state.user.role === 'client') {
+
+      // We verify if the client-portal.js file has loaded the function
+      if (typeof renderClientPortal === "function") {
+          renderClientPortal();
+      } else {
+          console.warn("client-portal.js not loaded yet. Waiting...");
+          // Optional: Retry after 100ms if script is slow to load
+          setTimeout(refreshUI, 100);
+      }
+
+      // IMPORTANT: Stop here! Do not run the Admin dashboard code below.
+      return;
+  }
+
+  // 3. If NOT a client (aka Admin), run the standard Admin Dashboards
   try { renderDashboard(); } catch(e) { console.error("Dash Error:", e); }
   try { renderLoansTable(); } catch(e) { console.error("Loans Table Error:", e); }
   try { renderRepaymentsTable(); } catch(e) { console.error("Repay Table Error:", e); }
   try { renderMonthlyTable(); } catch(e) { console.error("Monthly Table Error:", e); }
   try { renderClientsTable(); } catch(e) { console.error("Clients Table Error:", e); }
   try { renderAdminsTable(); } catch(e) { console.error("Admins Table Error:", e); }
+
+  // Ensure the Client Portal view is hidden when in Admin mode
+  const clientView = el("view-client-portal");
+  if (clientView) clientView.classList.add("view-hidden");
 }
-
-// --- RESTORED DASHBOARD FUNCTION ---
-function renderDashboard() {
-  const container = el("dashboardStats");
-  if (!container) return;
-
-  const loans = state.loans || [];
-
-  // 1. Calculate Stats
-  const totalLoaned = loans.reduce((s, l) => s + (l.amount || 0), 0);
-
-  // FIX: Exclude DEFAULTED loans from "Outstanding" calculation
-  const totalOutstanding = loans.reduce((s, l) => {
-      if (l.status === "DEFAULTED") return s; // Don't count bad debt
-      return s + Math.max(0, l.balance || 0);
-  }, 0);
-
-  const totalProfit = loans.reduce((s, l) => s + (l.profitCollected || 0), 0);
-
-  // Active Count (Excludes Defaulted/Paid)
-  const activeCount = loans.filter(l => l.status === "ACTIVE" || l.status === "OVERDUE").length;
-
-  const starting = state.startingCapital || 0;
-  const added = (state.capitalTxns || []).reduce((s, t) => s + (t.amount || 0), 0);
-  const paidIn = loans.reduce((s, l) => s + (l.paid || 0), 0);
-  const cashOnHand = starting + added + paidIn - totalLoaned;
-
-  // 2. Logic: Red Text if Cash is Negative
-  const cashEl = el("cashOnHandValue");
-  if(cashEl) {
-    cashEl.textContent = formatMoney(cashOnHand);
-    if (cashOnHand < 0) cashEl.classList.add("text-danger-glow");
-    else cashEl.classList.remove("text-danger-glow");
-  }
-
-  // 3. Capital Tab Logic
-  if (state.startingCapital > 0) {
-      if(el("startingCapitalSetupRow")) el("startingCapitalSetupRow").style.display = "none";
-      if(el("startingCapitalInfoRow")) {
-          el("startingCapitalInfoRow").style.display = "block";
-          el("startingCapitalInfoValue").textContent = formatMoney(state.startingCapital);
-          el("startingCapitalInfoDate").textContent = formatDate(state.startingCapitalSetDate || new Date().toISOString());
-      }
-      if(el("startingCapitalValue")) el("startingCapitalValue").textContent = formatMoney(state.startingCapital);
-  } else {
-      if(el("startingCapitalSetupRow")) el("startingCapitalSetupRow").style.display = "block";
-      if(el("startingCapitalInfoRow")) el("startingCapitalInfoRow").style.display = "none";
-      if(el("startingCapitalValue")) el("startingCapitalValue").textContent = "Not set";
-  }
-
-  const capBody = el("capitalTableBody");
-  if(capBody) {
-     capBody.innerHTML = (state.capitalTxns || []).map(t => `
-        <tr><td>${formatDate(t.date)}</td><td>${formatMoney(t.amount)}</td><td class="subtle">${t.note || '-'}</td></tr>
-     `).join("");
-  }
-
-  // 4. Render Cards
-  container.innerHTML = `
-    <div class="stat-card" style="border-color: var(--primary);">
-      <div class="stat-label">Active Deals</div>
-      <div class="stat-value" style="font-size: 1.8rem;">${activeCount}</div>
-      <div class="stat-sub">Clients with open balances</div>
-    </div>
-
-    <div class="stat-card stat-purple">
-      <div class="stat-label">Total Loaned</div>
-      <div class="stat-value" id="statLoaned">K0.00</div>
-      <div class="stat-sub">Lifetime capital deployed</div>
-    </div>
-
-    <div class="stat-card stat-orange">
-      <div class="stat-label">Outstanding</div>
-      <div class="stat-value" id="statOutstanding">K0.00</div>
-      <div class="stat-sub">Pending collection (Excl. Bad Debt)</div>
-    </div>
-
-    <div class="stat-card stat-green">
-      <div class="stat-label">Profit Made</div>
-      <div class="stat-value" id="statProfit">K0.00</div>
-      <div class="stat-sub">Total realized gains collected</div>
-    </div>
-  `;
-
-  animateValue(el("statLoaned"), 0, totalLoaned, 1500);
-  animateValue(el("statOutstanding"), 0, totalOutstanding, 2000);
-  animateValue(el("statProfit"), 0, totalProfit, 2500);
-}
-
 // --- UPDATED LOANS TABLE (With Receipt, WhatsApp & Write Off) ---
 function renderLoansTable() {
   const overdueCount = (state.loans || []).filter(l => l.status === "OVERDUE").length;
@@ -1078,7 +1149,7 @@ showToast = function(message, type = "success") {
 // 9. MAIN INIT (The "Start Button")
 // ==========================================
 function init() {
-  // 1. Navigation Listeners
+  // 1. Navigation Listeners (Bottom/Top Bar)
   document.querySelectorAll(".nav-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       vibrate([10]); // Tiny click feedback
@@ -1087,19 +1158,22 @@ function init() {
   });
 
   // 2. Wizard Modal Listeners (New Loan)
-  el("openLoanModalBtn")?.addEventListener("click", () => {
-    vibrate([10]);
-    wizardStep=0;
-    wizardDraft={};
-    updateWizard();
-    el("loanModal").classList.remove("modal-hidden");
-  });
+  const openLoanBtn = el("openLoanModalBtn");
+  if (openLoanBtn) {
+      openLoanBtn.addEventListener("click", () => {
+        vibrate([10]);
+        wizardStep = 0;
+        wizardDraft = {};
+        updateWizard(); // Reset wizard to Step 1
+        el("loanModal").classList.remove("modal-hidden");
+      });
+  }
 
   el("modalCloseBtn")?.addEventListener("click", () => el("loanModal").classList.add("modal-hidden"));
   el("modalNextBtn")?.addEventListener("click", () => { vibrate([10]); handleWizardNext(); });
   el("modalBackBtn")?.addEventListener("click", () => { vibrate([10]); handleWizardBack(); });
 
-  // 3. Action Modal Listeners
+  // 3. Action Modal Listeners (Pay, Note, etc.)
   el("actionModalCloseBtn")?.addEventListener("click", () => el("actionModal").classList.add("modal-hidden"));
   el("actionModalCancelBtn")?.addEventListener("click", () => el("actionModal").classList.add("modal-hidden"));
 
@@ -1155,10 +1229,15 @@ function init() {
       });
   });
 
-  // 6. Capital Buttons
+  // 6. Capital Buttons (Set Initial & Add New)
   el("setStartingCapitalBtn")?.addEventListener("click", () => {
       const val = Number(el("startingCapitalInitial").value);
-      if (val > 0) { state.startingCapital = val; state.startingCapitalSetDate = new Date().toISOString(); saveState(); refreshUI(); }
+      if (val > 0) {
+          state.startingCapital = val;
+          state.startingCapitalSetDate = new Date().toISOString();
+          saveState();
+          refreshUI();
+      }
   });
 
   el("addCapitalBtn")?.addEventListener("click", () => {
@@ -1168,9 +1247,15 @@ function init() {
           showToast("Enter a valid positive amount", "error");
           return;
       }
-      state.capitalTxns.unshift({ id: generateCapitalTxnId(), amount: val, date: new Date().toISOString(), note: "Manual Add" });
+      state.capitalTxns.unshift({
+          id: generateCapitalTxnId(),
+          amount: val,
+          date: new Date().toISOString(),
+          note: "Manual Add"
+      });
       input.value = "";
-      saveState(); refreshUI();
+      saveState();
+      refreshUI();
       showToast("Capital added successfully!", "success");
   });
 
@@ -1214,19 +1299,45 @@ function init() {
     }, { passive: true });
   }
 
-  // 9. Filters
+  // 9. Filters (Search, Status, Plan)
   ["searchInput", "statusFilter", "planFilter"].forEach(id => el(id)?.addEventListener("input", renderLoansTable));
 
-  // 10. Startup Logic
-  checkTimeBasedTheme();
-  setInterval(checkTimeBasedTheme, 60000);
+  // 10. NEW: ADMIN LOGOUT BUTTON
+  // This allows Admins to exit the dashboard and return to Login
+  const adminLogoutBtn = el("adminLogoutBtn");
+  if (adminLogoutBtn) {
+      adminLogoutBtn.addEventListener("click", () => {
+          vibrate([20]);
+          if (confirm("Log out of Admin Dashboard?")) {
+              // Clear local session markers
+              localStorage.removeItem("stallz_test_session");
+              localStorage.removeItem("stallz_last_active");
 
-  setActiveView("main");
-  showWelcomeScreen();
+              // Sign out of Firebase
+              if (typeof firebase !== "undefined" && firebase.auth) {
+                  firebase.auth().signOut();
+              }
 
-  // --- ACTIVATE MOBILE FEATURES ---
-  // This turns on the Install Button, Vibrations, and Long Press actions
-  setupMobileUX();
+              // Reset State
+              state.user = null;
+              state.isLoggedIn = false;
+
+              // Force Reload
+              location.reload();
+          }
+      });
+  }
+
+  // 11. STARTUP SEQUENCE
+  checkTimeBasedTheme(); // Set Light/Dark mode
+  setInterval(checkTimeBasedTheme, 60000); // Re-check every minute
+
+  setActiveView("main"); // Default to Overview
+  showWelcomeScreen();   // Show Login/Register
+
+  checkAppVersion();     // Check for v1.6 update
+  setupMobileUX();       // Initialize Vibrations & Install Prompt
 }
 
+// Start the engine when the DOM is ready
 document.addEventListener("DOMContentLoaded", init);
