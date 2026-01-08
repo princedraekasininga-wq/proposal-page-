@@ -574,7 +574,7 @@ tbody tr:hover {
 
   /* The Fix: Pushing the logo down */
   .logo-img {
-    height: 45px;       /* Slightly reduced for better mobile proportion */
+    height: 48px;       /* Slightly reduced for better mobile proportion */
     margin-right: 10px;
     margin-top: 6px;    /* <--- THIS moves the logo down. Increase to 8px or 10px if needed. */
     transform: none;    /* Removes the 3D tilt on mobile for a cleaner look */
