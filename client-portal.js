@@ -1,153 +1,132 @@
-// =========================================
-// CLIENT PORTAL LOGIC (v3.0 - Floating Nav)
-// =========================================
+// ==========================================
+// CLIENT PORTAL JS
+// ==========================================
 
-function renderClientPortal() {
-  console.log("Rendering Client Portal...");
+// --- 1. FIREBASE CONFIG ---
+// !!! PASTE YOUR KEYS HERE from your main app.js !!!
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY_HERE",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
 
-  // 1. UI Setup
-  const header = document.querySelector("header");
-  const topNav = document.querySelector(".top-nav");
-  const adminLogout = document.getElementById("adminLogoutBtn");
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
 
-  if (header) header.style.display = "flex";
-  if (topNav) topNav.style.display = "none";
-  if (adminLogout) adminLogout.style.display = "none";
+// --- 2. GREETING LOGIC ---
+function setDynamicGreeting() {
+    const hour = new Date().getHours();
+    const greetingEl = document.getElementById('greetingText');
 
-  document.querySelectorAll("[id^='view-']").forEach(v => v.classList.add("view-hidden"));
-  const view = document.getElementById("view-client-portal");
-  if (view) view.classList.remove("view-hidden");
+    if (hour < 12) greetingEl.innerText = "Good Morning,";
+    else if (hour < 18) greetingEl.innerText = "Good Afternoon,";
+    else greetingEl.innerText = "Good Evening,";
+}
 
-  // 2. Fetch Data
-  const myPhone = state.user.phone ? state.user.phone.replace(/\D/g, '') : "";
-  const myLoans = state.loans.filter(l => {
-      const loanPhone = (l.clientPhone || "").replace(/\D/g, '');
-      return loanPhone.includes(myPhone) || (myPhone && myPhone.includes(loanPhone));
-  });
+// --- 3. PAGE LOAD LOGIC ---
+document.addEventListener('DOMContentLoaded', () => {
+    setDynamicGreeting();
 
-  // 3. Render Tier Card
-  let score = 50;
-  // ... (Your existing Tier Logic here) ...
-  const paidCount = myLoans.filter(l => l.status === "PAID").length;
-  score += (paidCount * 10);
+    const urlParams = new URLSearchParams(window.location.search);
+    const clientId = urlParams.get('id');
 
-  let tier = { name: "Bronze Member", class: "tier-bronze", icon: "🥉", limit: "K500" };
-  if (score >= 80) tier = { name: "Silver Member", class: "tier-silver", icon: "🥈", limit: "K2,000" };
-  if (score >= 150) tier = { name: "Gold Member", class: "tier-gold", icon: "🥇", limit: "K5,000" };
+    if (!clientId) {
+        document.getElementById('portalClientName').innerText = "Error: No ID";
+        return;
+    }
 
-  const tierContainer = document.getElementById("cpTierContainer");
-  if (tierContainer) {
-      tierContainer.innerHTML = `
-        <div class="cp-tier-card ${tier.class}">
-            <div class="cp-tier-icon">${tier.icon}</div>
-            <div class="cp-tier-info">
-                <h3>${tier.name}</h3>
-                <p>Trust Score: ${score}</p>
-            </div>
-            <div class="cp-tier-limit">
-                <span>Limit</span>
-                <strong>${tier.limit}</strong>
-            </div>
-        </div>
-      `;
-  }
+    loadClientData(clientId);
+    loadLoansData(clientId);
+});
 
-  // 4. Update Header
-  const elName = document.getElementById("cpClientName");
-  if(elName) elName.textContent = state.user.name || "Client";
+// --- 4. FETCH DATA ---
+function loadClientData(id) {
+    db.collection('clients').doc(id).get().then((doc) => {
+        if (doc.exists) {
+            const data = doc.data();
+            document.getElementById('portalClientName').innerText = data.name;
 
-  const activeLoan = myLoans.find(l => l.status === "ACTIVE" || l.status === "OVERDUE");
-  const totalBalance = activeLoan ? activeLoan.balance : 0;
+            // Fill Modal Data
+            document.getElementById('modalPhone').innerText = data.phone || "Not set";
+            document.getElementById('modalID').innerText = data.idNumber || "Not set";
+            document.getElementById('modalAddress').innerText = data.address || "Not set";
+        } else {
+            document.getElementById('portalClientName').innerText = "Client Not Found";
+        }
+    });
+}
 
-  const elBalance = document.getElementById("cpBalance");
-  if(elBalance) elBalance.textContent = formatMoney(totalBalance);
+function loadLoansData(id) {
+    const tableBody = document.getElementById('portalLoansTable');
+    let totalDebt = 0;
+    let totalPaid = 0;
+    let activeCount = 0;
 
-  // 5. FLOATING MENU LOGIC
-  const fabBtn = document.getElementById("fabMainBtn");
-  const fabMenu = document.getElementById("fabMenu");
+    db.collection('loans').where('clientId', '==', id).onSnapshot((snapshot) => {
+        if (snapshot.empty) {
+            tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#aaa;">No active loan history found.</td></tr>';
+            return;
+        }
 
-  if (fabBtn && fabMenu) {
-      fabBtn.onclick = () => {
-          fabBtn.classList.toggle("open");
-          fabMenu.classList.toggle("show");
-          if(typeof vibrate === "function") vibrate([10]);
-      };
-  }
+        tableBody.innerHTML = ''; // Clear loading text
 
-  // --- A. CALCULATOR ---
-  const btnCalc = document.getElementById("fabCalculator");
-  const modalCalc = document.getElementById("calculatorModal");
-  const closeCalc = document.getElementById("closeCalcModal");
+        snapshot.forEach((doc) => {
+            const loan = doc.data();
 
-  if (btnCalc) {
-      btnCalc.onclick = () => {
-          modalCalc.classList.remove("modal-hidden");
-          fabMenu.classList.remove("show");
-          fabBtn.classList.remove("open");
-      };
-  }
-  if (closeCalc) {
-      closeCalc.onclick = () => modalCalc.classList.add("modal-hidden");
-  }
+            // Math
+            const principal = parseFloat(loan.amount);
+            const interest = loan.interestAmount ? parseFloat(loan.interestAmount) : (principal * (loan.interestRate || 20) / 100);
+            const totalDue = principal + interest;
+            const paid = parseFloat(loan.amountPaid || 0);
+            const balance = totalDue - paid;
 
-  // Calculator Math
-  const mAmount = document.getElementById("modalCalcAmount");
-  const mPlan = document.getElementById("modalCalcPlan");
-  const mResult = document.getElementById("modalCalcResult");
+            // Stats Aggregation
+            totalDebt += balance;
+            totalPaid += paid;
+            if (balance > 1) activeCount++;
 
-  const runCalc = () => {
-      const val = parseFloat(mAmount.value) || 0;
-      let rate = 0.20;
-      if (mPlan.value === "2 Weeks") rate = 0.30;
-      if (mPlan.value === "3 Weeks") rate = 0.35;
-      if (mPlan.value === "Monthly") rate = 0.40;
-      mResult.textContent = formatMoney(val * (1 + rate));
-  };
-  if(mAmount && mPlan) {
-      mAmount.oninput = runCalc;
-      mPlan.onchange = runCalc;
-  }
+            // Status Badge Logic
+            let statusClass = 'status-active';
+            let statusText = 'Active';
+            if (balance <= 1) { statusClass = 'status-paid'; statusText = 'Paid'; }
+            else if (new Date() > new Date(loan.dueDate)) { statusClass = 'status-overdue'; statusText = 'Overdue'; }
 
-  // --- B. REQUEST LOAN ---
-  const btnReq = document.getElementById("fabRequestLoan");
-  if (btnReq) {
-      btnReq.onclick = () => {
-          const amount = prompt("Amount to borrow (e.g. 500):");
-          if(!amount) return;
-          const item = prompt("Collateral item:");
-          if(!item) return;
+            const row = `
+                <tr>
+                    <td>${new Date(loan.date).toLocaleDateString()}</td>
+                    <td>${principal.toFixed(2)}</td>
+                    <td>${totalDue.toFixed(2)}</td>
+                    <td>${paid.toFixed(2)}</td>
+                    <td style="font-weight:bold; color: ${balance <= 1 ? '#4ade80' : 'white'}">${balance.toFixed(2)}</td>
+                    <td><span class="status-pill ${statusClass}">${statusText}</span></td>
+                </tr>
+            `;
+            tableBody.innerHTML += row;
+        });
 
-          const newRequest = {
-             id: Date.now(),
-             clientName: state.user.name,
-             clientPhone: state.user.phone,
-             amount: Number(amount),
-             collateralItem: item,
-             status: "PENDING",
-             startDate: new Date().toISOString(),
-             plan: "Weekly",
-             balance: Number(amount)
-          };
+        // Update Header Stats
+        document.getElementById('portalTotalDebt').innerText = 'K' + totalDebt.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('portalTotalPaid').innerText = 'K' + totalPaid.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('portalActiveCount').innerText = activeCount;
+    });
+}
 
-          if(state.loans) state.loans.unshift(newRequest);
-          if(typeof saveState === "function") saveState();
-
-          const adminPhone = "260970000000";
-          const text = `Hi, I request a loan.\n\n💰 K${amount}\n🎒 ${item}`;
-          window.open(`https://wa.me/${adminPhone}?text=${encodeURIComponent(text)}`, '_blank');
-
-          if(typeof showToast === "function") showToast("Request sent!", "success");
-          setTimeout(() => location.reload(), 1000);
-      };
-  }
-
-  // --- C. PAY ---
-  const fabPay = document.getElementById("fabPay");
-  if (fabPay) {
-      fabPay.onclick = () => {
-          const adminPhone = "260970000000";
-          const msg = `Hi, I want to pay my balance of ${formatMoney(totalBalance)}.`;
-          window.open(`https://wa.me/${adminPhone}?text=${encodeURIComponent(msg)}`, '_blank');
-      };
-  }
+// --- 5. MODAL FUNCTIONS ---
+function openProfileModal() {
+    document.getElementById('profileModal').style.display = 'flex';
+}
+function closeProfileModal() {
+    document.getElementById('profileModal').style.display = 'none';
+}
+// Close on outside click
+window.onclick = function(event) {
+    const modal = document.getElementById('profileModal');
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
 }
